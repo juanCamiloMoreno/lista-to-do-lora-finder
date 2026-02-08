@@ -1,6 +1,8 @@
-# Plan de Acción — Resumen Ejecutivo
+# Plan de Acción — Versión 2.0 (Actualizado)
 
 ## Sistema de Búsqueda LoRa — Trabajo de Grado
+
+---
 
 **Estudiante:** Juan Camilo Moreno Zornosa  
 **Director:** Ing. Gustavo Adolfo Ramírez Espinosa, PhD  
@@ -9,262 +11,435 @@
 
 ---
 
-## 1. Resumen de Fases CDIO
+## Cambio Metodológico v2.0
+
+### Enfoque Anterior vs Nuevo Enfoque
+
+```
+(MAL) ENFOQUE ANTERIOR (v1.0):
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Diseño    │    │   Código    │    │  Pruebas    │    │   Tesis     │
+│  Protocolo  │───►│   LoRa      │───►│   Campo     │───►│             │
+│             │    │             │    │             │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+
+NUEVO ENFOQUE (v2.0):
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Casos de   │    │  Revisión   │    │   Diseño    │    │   Código    │    │  Pruebas    │
+│    Uso      │───►│  Director   │───►│  Técnico    │───►│             │───►│  + Tesis    │
+│             │    │             │    │             │    │             │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+   Semana 1-2        Semana 2          Semana 3-4        Semana 5-8         Semana 9-18
+```
+
+### Justificación del Cambio
+
+| Aspecto | Beneficio |
+|---------|-----------|
+| **Validación temprana** | Los casos de uso se revisan ANTES de escribir código |
+| **Menos retrabajo** | Se identifican escenarios de falla desde el inicio |
+| **Mejor documentación** | El documento de tesis tiene base sólida de requisitos |
+| **Comunicación clara** | Director y estudiante alineados en el alcance |
+
+---
+
+## 1. Resumen de Fases (Actualizado)
 
 | Fase | Mes | Semanas | Objetivo Principal | Entregable Clave |
 |------|-----|---------|-------------------|------------------|
-| **Diseño Detallado** | Febrero | 1-4 | Protocolo P2P + Código LoRa básico | Comunicación LoRa funcional |
-| **Implementación** | Marzo | 5-8 | Integración de módulos + Firmware | Prototipo funcional completo |
-| **Operación/Validación** | Abril | 9-13 | Pruebas de campo + Métricas | Informe técnico de resultados |
+| **Casos de Uso y Diseño** | Febrero | 1-4 | Casos de uso + Revisión + Protocolo | Documento aprobado |
+| **Implementación** | Marzo | 5-8 | Código completo del firmware | Prototipo funcional |
+| **Validación** | Abril | 9-13 | Pruebas de campo + Métricas | Informe de resultados |
 | **Documentación** | Mayo | 14-18 | Redacción + Sustentación | Tesis aprobada |
 
 ---
 
-## 2. Cronograma Gantt (18 Semanas)
+## 2. Cronograma Gantt Actualizado (18 Semanas)
 
 ```
-2026            FEBRERO           MARZO             ABRIL             MAYO
-Semana    1   2   3   4     5   6   7   8     9  10  11  12  13    14  15  16  17  18
-          │   │   │   │     │   │   │   │     │   │   │   │   │     │   │   │   │   │
-          ▼   ▼   ▼   ▼     ▼   ▼   ▼   ▼     ▼   ▼   ▼   ▼   ▼     ▼   ▼   ▼   ▼   ▼
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ FASE 1: DISEÑO DETALLADO                                                            │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│ Protocolo P2P        ████████                                                       │
-│ Análisis LoRa            ████████                                                   │
-│ Código LoRa básico           ████████                                               │
-│ Power Budget                     ████████                                           │
-│                                       │                                             │
-│ 🎯 HITO 1: LoRa P2P funcionando ──────┘                                             │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│ FASE 2: IMPLEMENTACIÓN                                                              │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│ Integración GPS+LoRa                  ████████                                      │
-│ Integración OLED+Brújula                  ████████                                  │
-│ Máquina de estados                            ████████                              │
-│ Pruebas integración                               ████████                          │
-│                                                       │                             │
-│ 🎯 HITO 2: Prototipo funcional ───────────────────────┘                             │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│ FASE 3: OPERACIÓN Y VALIDACIÓN                                                      │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│ Protocolo pruebas                                     ████████                      │
-│ Pruebas semi-rural                                        ████████                  │
-│ Pruebas urbano                                                ████████              │
-│ Autonomía + Optimización                                          ████████         │
-│ Análisis estadístico                                                  ████████     │
-│                                                                           │         │
-│ 🎯 HITO 3: Validación completa ───────────────────────────────────────────┘         │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│ FASE 4: DOCUMENTACIÓN Y CIERRE                                                      │
-├─────────────────────────────────────────────────────────────────────────────────────┤
-│ Redacción Cap. 3-5                                                    ████████     │
-│ Redacción Cap. 6-7                                                        ████████ │
-│ Revisión director                                                             █████│
-│ Sustentación                                                                    ███│
-│                                                                                   │ │
-│ 🎯 HITO 4: Tesis aprobada ────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────────────┘
+2026            FEBRERO              MARZO              ABRIL              MAYO
+Semana    1   2   3   4      5   6   7   8      9  10  11  12  13     14  15  16  17  18
+          │   │   │   │      │   │   │   │      │   │   │   │   │      │   │   │   │   │
+          ▼   ▼   ▼   ▼      ▼   ▼   ▼   ▼      ▼   ▼   ▼   ▼   ▼      ▼   ▼   ▼   ▼   ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│ FASE 1: CASOS DE USO Y DISEÑO                                                           │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ Casos de uso principales  ████████                                                      │
+│ Escenarios de falla           ████████                                                  │
+│ 📋 REVISIÓN CON DIRECTOR          ██                                                    │
+│ Diseño protocolo P2P              ████████                                              │
+│ Diseño máquina estados                ████████                                          │
+│                                           │                                             │
+│  HITO 1: Casos de uso aprobados ────────┘                                             │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ FASE 2: IMPLEMENTACIÓN                                                                  │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ Código LoRa TX/RX básico                  ████████                                      │
+│ Integración GPS+LoRa                          ████████                                  │
+│ Máquina de estados                                ████████                              │
+│ Integración completa                                  ████████                          │
+│                                                           │                             │
+│  HITO 2: Prototipo funcional ───────────────────────────┘                             │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ FASE 3: VALIDACIÓN                                                                      │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ Pruebas laboratorio                                       ████████                      │
+│ Pruebas campo semi-rural                                      ████████                  │
+│ Pruebas campo urbano                                              ████████              │
+│ Análisis de resultados                                                ████████          │
+│                                                                           │             │
+│  HITO 3: Validación completa ───────────────────────────────────────────┘             │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ FASE 4: DOCUMENTACIÓN                                                                   │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│ Redacción capítulos                                                       ████████████ │
+│ Revisión director                                                               ██████ │
+│ Sustentación                                                                       ████│
+│                                                                                      │ │
+│  HITO 4: Tesis aprobada ───────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+LEYENDA:
+████  Actividad programada
+📋    Punto de revisión con director
+🎯    Hito principal
 ```
 
 ---
 
-## 3. Tabla de Actividades por Semana
+## 3. Detalle de Actividades por Semana
 
-### Mes 1: Febrero 2026 — Diseño Detallado
+### Fase 1: Casos de Uso y Diseño (Febrero — Semanas 1-4)
 
-| Sem | Actividad | Entregable | Hrs |
-|:---:|-----------|------------|:---:|
-| 1 | Diseño protocolo P2P (Node IDs, tipos de mensaje) | Documento de especificación | 18 |
-| 1 | Diseño estructura payload GPS (codificación escalada) | Diagrama de payload | — |
-| 2 | Análisis parámetros LoRa (SF, BW, CR vs ToA) | Tabla comparativa | 18 |
-| 2 | Desarrollo código LoRa TX/RX básico (ping-pong) | Código funcional | — |
-| 3 | Pruebas comunicación LoRa en laboratorio | Registro RSSI/SNR | 18 |
-| 3 | Ajuste de parámetros según pruebas | Config. optimizada | — |
-| 4 | Diseño power budget (consumo estimado) | Análisis energético | 18 |
-| 4 | Diseño máquina de estados (UML) | Diagrama de estados | — |
+#### Semana 1: Casos de Uso Principales
 
-**🎯 Hito Mes 1:** Comunicación LoRa P2P funcional entre 2 Heltec V4
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Definir actores del sistema | Diagrama de actores | 4 |
+| Documentar CU-01 a CU-07 (casos principales) | Fichas de casos de uso | 8 |
+| Crear diagramas de secuencia | Diagramas UML | 4 |
+| Diseño inicial de pantallas OLED | Mockups | 2 |
+| **Total Semana 1** | | **18** |
 
----
+#### Semana 2: Escenarios de Falla + Revisión
 
-### Mes 2: Marzo 2026 — Implementación
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Documentar FA-01 a FA-06 (escenarios de falla) | Fichas de escenarios | 6 |
+| Crear matriz de respuestas del sistema | Tabla de respuestas | 4 |
+| Derivar requisitos funcionales y no funcionales | Lista de requisitos | 3 |
+| **📋 REVISIÓN CON DIRECTOR** | Documento revisado | 3 |
+| Incorporar feedback del director | Documento actualizado | 2 |
+| **Total Semana 2** | | **18** |
 
-| Sem | Actividad | Entregable | Hrs |
-|:---:|-----------|------------|:---:|
-| 5 | Integración GPS + LoRa (transmisión coords) | Código GPS+LoRa | 18 |
-| 5 | Implementación payload binario optimizado | Funciones encode/decode | — |
-| 6 | Integración OLED (estados, distancia) | Interfaz OLED | 18 |
-| 6 | Integración brújula GY-271 | Código brújula | — |
-| 7 | Implementación máquina de estados | Firmware estados | 18 |
-| 7 | Implementación activación remota | Protocolo activación | — |
-| 8 | Implementación lógica botón (clic/doble) | Interfaz usuario | 18 |
-| 8 | Pruebas integración laboratorio | Registro pruebas | — |
+#### Semana 3: Diseño del Protocolo P2P
 
-**🎯 Hito Mes 2:** Firmware integrado + Prueba de concepto funcional
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Definir estructura del paquete (header + payload) | Diagrama de paquete | 4 |
+| Definir tipos de mensaje (ALERT, ACK, LOCATION, etc.) | Tabla de mensajes | 4 |
+| Diseñar codificación binaria del payload GPS | Especificación de encoding | 4 |
+| Definir parámetros LoRa (SF, BW, CR) | Tabla de configuración | 3 |
+| Calcular Time on Air (ToA) | Análisis de rendimiento | 3 |
+| **Total Semana 3** | | **18** |
 
----
+#### Semana 4: Máquina de Estados + Cierre Fase 1
 
-### Mes 3: Abril 2026 — Validación
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Diseñar máquina de estados completa | Diagrama de estados UML | 6 |
+| Definir tabla de transiciones | Tabla de transiciones | 4 |
+| Diseñar manejo de errores y timeouts | Especificación de errores | 4 |
+| Consolidar documento de especificación | Documento final fase 1 | 4 |
+| **Total Semana 4** | | **18** |
 
-| Sem | Actividad | Entregable | Hrs |
-|:---:|-----------|------------|:---:|
-| 9 | Diseño protocolo de pruebas (métricas) | Protocolo documentado | 18 |
-| 9 | Ensamble carcasas 3D + baterías | Dispositivos listos | — |
-| 10 | Pruebas campo semi-rural (línea base) | Datos alcance/RSSI | 18 |
-| 10 | Caracterización SF7-SF12 vs alcance | Tabla SF | — |
-| 11 | Pruebas campo urbano denso | Datos PDR urbano | 18 |
-| 11 | Medición precisión GPS en movimiento | Error localización | — |
-| 12 | Pruebas autonomía (standby/búsqueda) | Duración batería | 18 |
-| 12 | Optimización configuración final | Config. validada | — |
-| 13 | Pruebas casos límite | Registro extremos | 18 |
-| 13 | Análisis estadístico de datos | Informe técnico | — |
-
-**🎯 Hito Mes 3:** Validación completa + Informe de resultados
+**🎯 HITO 1 (Fin de Semana 4):** Documento de Casos de Uso y Protocolo aprobado
 
 ---
 
-### Mes 4: Mayo 2026 — Documentación
+### Fase 2: Implementación (Marzo — Semanas 5-8)
 
-| Sem | Actividad | Entregable | Hrs |
-|:---:|-----------|------------|:---:|
-| 14 | Redacción Cap. Metodología y Diseño | Cap. 3-4 borrador | 18 |
-| 14 | Generación figuras y tablas finales | Material gráfico | — |
-| 15 | Redacción Cap. Implementación | Cap. 5 borrador | 18 |
-| 15 | Documentación código (README) | Repositorio docs | — |
-| 16 | Redacción Cap. Resultados | Cap. 6 borrador | 18 |
-| 16 | Redacción Conclusiones | Cap. 7 borrador | — |
-| 17 | Revisión con director | Doc. corregido | 18 |
-| 17 | Preparación presentación | PowerPoint | — |
-| 18 | Ajustes finales | Documento final | 18 |
-| 18 | Sustentación | ✅ Aprobación | — |
+#### Semana 5: Código LoRa Básico
 
-**🎯 Hito Mes 4:** Tesis aprobada + Sustentación exitosa
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Configurar proyecto PlatformIO para Heltec V4 | platformio.ini | 2 |
+| Implementar código LoRa TX básico | lora_tx.cpp | 6 |
+| Implementar código LoRa RX básico | lora_rx.cpp | 6 |
+| Prueba ping-pong entre dispositivos | Log de pruebas | 4 |
+| **Total Semana 5** | | **18** |
+
+#### Semana 6: Integración GPS + LoRa
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Integrar lectura GPS existente | gps_handler.cpp | 4 |
+| Implementar codificación binaria de coordenadas | location_codec.cpp | 4 |
+| Transmitir coordenadas GPS vía LoRa | Código integrado | 6 |
+| Pruebas de transmisión de ubicación | Log de pruebas | 4 |
+| **Total Semana 6** | | **18** |
+
+#### Semana 7: Máquina de Estados
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Implementar estados (STANDBY, SEEKING, SENDING) | state_machine.cpp | 8 |
+| Implementar transiciones y eventos | Código de transiciones | 6 |
+| Implementar manejo de botón (clic, doble clic) | button_handler.cpp | 4 |
+| **Total Semana 7** | | **18** |
+
+#### Semana 8: Integración Completa
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Integrar OLED con estados y mensajes | display_handler.cpp | 4 |
+| Integrar brújula para dirección | compass_handler.cpp | 4 |
+| Implementar cálculo de distancia (Haversine) | distance.cpp | 3 |
+| Pruebas de integración en laboratorio | Log de pruebas | 4 |
+| Depuración y corrección de errores | Código corregido | 3 |
+| **Total Semana 8** | | **18** |
+
+**🎯 HITO 2 (Fin de Semana 8):** Prototipo funcional completo
 
 ---
 
-## 4. Resumen de Hitos Principales
+### Fase 3: Validación (Abril — Semanas 9-13)
 
-| # | Hito | Fecha Objetivo | Criterio de Éxito |
-|:-:|------|----------------|-------------------|
-| 1 | LoRa P2P funcionando | Fin Febrero | Ping-pong exitoso entre dispositivos |
-| 2 | Prototipo funcional | Fin Marzo | Sistema completo operando en lab |
-| 3 | Validación completa | Fin Abril | Métricas cumplidas (PDR>80%, 300m+) |
-| 4 | Tesis aprobada | Fin Mayo | Sustentación exitosa |
+#### Semana 9: Preparación y Pruebas Laboratorio
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Diseñar protocolo de pruebas | Documento de pruebas | 4 |
+| Preparar equipos (carcasas, baterías) | Dispositivos listos | 4 |
+| Pruebas de todos los casos de uso en lab | Checklist completado | 6 |
+| Verificar escenarios de falla | Log de verificación | 4 |
+| **Total Semana 9** | | **18** |
+
+#### Semana 10: Pruebas Campo Semi-Rural
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Pruebas de alcance máximo (línea de vista) | Datos de alcance | 6 |
+| Caracterización SF7 vs SF12 | Tabla comparativa SF | 6 |
+| Medición RSSI y SNR vs distancia | Gráficas de señal | 6 |
+| **Total Semana 10** | | **18** |
+
+#### Semana 11: Pruebas Campo Urbano
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Pruebas en ambiente urbano denso | Datos de alcance urbano | 6 |
+| Medición de PDR (Packet Delivery Ratio) | Estadísticas PDR | 6 |
+| Pruebas con obstáculos (edificios, multitud) | Log de condiciones | 6 |
+| **Total Semana 11** | | **18** |
+
+#### Semana 12: Pruebas de Rendimiento
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Medición de precisión GPS en movimiento | Error de localización | 6 |
+| Pruebas de autonomía (standby) | Duración en standby | 4 |
+| Pruebas de autonomía (búsqueda activa) | Duración en búsqueda | 4 |
+| Pruebas de casos extremos | Log de extremos | 4 |
+| **Total Semana 12** | | **18** |
+
+#### Semana 13: Análisis y Optimización
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Análisis estadístico de datos | Tablas y gráficas | 8 |
+| Optimización de configuración según resultados | Config. optimizada | 4 |
+| Redacción de informe técnico de resultados | Informe de validación | 6 |
+| **Total Semana 13** | | **18** |
+
+**🎯 HITO 3 (Fin de Semana 13):** Validación completa con datos de campo
 
 ---
 
-## 5. Métricas de Éxito del Proyecto
+### Fase 4: Documentación (Mayo — Semanas 14-18)
+
+#### Semana 14: Capítulos de Metodología y Diseño
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Redacción Cap. 3: Metodología | Borrador Cap. 3 | 9 |
+| Redacción Cap. 4: Diseño del Sistema | Borrador Cap. 4 | 9 |
+| **Total Semana 14** | | **18** |
+
+#### Semana 15: Capítulo de Implementación
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Redacción Cap. 5: Implementación | Borrador Cap. 5 | 10 |
+| Documentación del código (README, comentarios) | Código documentado | 4 |
+| Generación de figuras y diagramas | Material gráfico | 4 |
+| **Total Semana 15** | | **18** |
+
+#### Semana 16: Capítulos de Resultados y Conclusiones
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Redacción Cap. 6: Resultados | Borrador Cap. 6 | 10 |
+| Redacción Cap. 7: Conclusiones | Borrador Cap. 7 | 6 |
+| Generación de tablas de resultados | Tablas finales | 2 |
+| **Total Semana 16** | | **18** |
+
+#### Semana 17: Revisión y Preparación
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| **📋 REVISIÓN INTEGRAL CON DIRECTOR** | Feedback recibido | 6 |
+| Incorporar correcciones | Documento corregido | 6 |
+| Preparar presentación de sustentación | PowerPoint | 6 |
+| **Total Semana 17** | | **18** |
+
+#### Semana 18: Entrega y Sustentación
+
+| Actividad | Entregable | Horas |
+|-----------|------------|:-----:|
+| Ajustes finales al documento | Documento final | 6 |
+| Ensayo de sustentación | — | 4 |
+| **ENTREGA DOCUMENTO FINAL** | Tesis entregada | 2 |
+| **SUSTENTACIÓN** | ✅ Aprobación | 6 |
+| **Total Semana 18** | | **18** |
+
+**🎯 HITO 4 (Fin de Semana 18):** Tesis aprobada y sustentación exitosa
+
+---
+
+## 4. Hitos y Puntos de Control
+
+| # | Hito | Semana | Fecha Estimada | Criterio de Éxito |
+|:-:|------|:------:|----------------|-------------------|
+| 1 | Casos de Uso Aprobados | 4 | Fin Febrero | Documento revisado y aprobado por director |
+| 2 | Prototipo Funcional | 8 | Fin Marzo | Sistema funcionando en laboratorio |
+| 3 | Validación Completa | 13 | Fin Abril | Métricas cumplidas (PDR>80%, 300m+) |
+| 4 | Tesis Aprobada | 18 | Fin Mayo | Sustentación exitosa |
+
+### Puntos de Revisión con Director
+
+| Semana | Tipo | Objetivo |
+|:------:|------|----------|
+| 2 | 📋 Revisión | Aprobar casos de uso y escenarios de falla |
+| 4 | 📋 Revisión | Aprobar diseño de protocolo y máquina de estados |
+| 8 | 📋 Demo | Mostrar prototipo funcional |
+| 13 | 📋 Revisión | Presentar resultados de validación |
+| 17 | 📋 Revisión | Revisar documento de tesis completo |
+
+---
+
+## 5. Métricas de Éxito
 
 | Métrica | Mínimo | Deseado | Método |
 |---------|:------:|:-------:|--------|
-| Alcance urbano | 300 m | 500 m | GPS + conteo paquetes |
+| Alcance efectivo (urbano) | 300 m | 500 m | GPS + conteo paquetes |
 | PDR (Packet Delivery Ratio) | 80% | 95% | RX/TX × 100 |
-| Tiempo respuesta | 30 s | 15 s | Timestamp TX→ACK |
-| Precisión GPS | 10 m | 5 m | vs GPS referencia |
+| Tiempo de respuesta | 30 s | 15 s | Timestamp TX→ACK |
+| Precisión GPS (CEP50) | 10 m | 5 m | vs GPS referencia |
 | Autonomía standby | 4 h | 8 h | Medición directa |
 | Autonomía búsqueda | 3 h | 4 h | Medición directa |
 
 ---
 
-## 6. Estado Actual vs Plan
+## 6. Estado Actual del Proyecto
 
-| Componente | Estado | Responsable | Semana |
-|------------|:------:|-------------|:------:|
-| ✅ Hardware Heltec V4 (×2) | Listo | — | — |
-| ✅ Módulos GPS | Listo | — | — |
-| ✅ Brújula GY-271 | Listo | — | — |
-| ✅ Código GPS | Listo | — | — |
-| ✅ Código Brújula | Listo | — | — |
-| ✅ Código OLED | Listo | — | — |
-| ⬜ Código LoRa P2P | Pendiente | Juan | 2-3 |
-| ⬜ Integración firmware | Pendiente | Juan | 5-8 |
-| ⬜ Carcasa 3D | Pendiente | Juan | 9 |
-| ⬜ Pruebas campo | Pendiente | Juan | 10-13 |
-| ⬜ Documento tesis | Pendiente | Juan | 14-18 |
+### Completado ✅
 
----
+| Componente | Estado | Notas |
+|------------|:------:|-------|
+| Hardware Heltec V4 (×2) | ✅ | Adquirido |
+| Módulos GPS | ✅ | Adquirido |
+| Brújula GY-271 | ✅ | Adquirido |
+| Código GPS (lectura) | ✅ | PlatformIO |
+| Código Brújula | ✅ | PlatformIO |
+| Código OLED | ✅ | PlatformIO |
 
-## 7. Cronograma Visual Simplificado
+### En Progreso 🔄
 
-```
-         FEB 2026              MAR 2026              ABR 2026              MAY 2026
-    ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
-    │                 │   │                 │   │                 │   │                 │
-    │  📐 DISEÑO      │   │  🔧 IMPLEMENTAR │   │  🧪 VALIDAR     │   │  📝 DOCUMENTAR  │
-    │                 │   │                 │   │                 │   │                 │
-    │  • Protocolo    │   │  • Integrar     │   │  • Pruebas      │   │  • Redactar     │
-    │  • LoRa básico  │   │    GPS+LoRa     │   │    campo        │   │    tesis        │
-    │  • Power budget │   │  • Estados      │   │  • Métricas     │   │  • Presentación │
-    │                 │   │  • UI botón     │   │  • Optimizar    │   │  • Sustentar    │
-    │                 │   │                 │   │                 │   │                 │
-    └────────┬────────┘   └────────┬────────┘   └────────┬────────┘   └────────┬────────┘
-             │                     │                     │                     │
-             ▼                     ▼                     ▼                     ▼
-        🎯 HITO 1            🎯 HITO 2            🎯 HITO 3            🎯 HITO 4
-       LoRa P2P OK         Prototipo OK        Validación OK        Tesis OK
-```
+| Componente | Estado | Semana |
+|------------|:------:|:------:|
+| Documento de Casos de Uso v2 | 🔄 | 1-2 |
+| Catálogo exhaustivo de escenarios | 🔄 | 1-2 |
+
+### Pendiente ⬜
+
+| Componente | Estado | Semana |
+|------------|:------:|:------:|
+| Revisión con director | ⬜ | 2 |
+| Diseño protocolo P2P | ⬜ | 3 |
+| Máquina de estados (diseño) | ⬜ | 4 |
+| Código LoRa TX/RX | ⬜ | 5 |
+| Integración completa | ⬜ | 5-8 |
+| Pruebas de campo | ⬜ | 9-13 |
+| Documento de tesis | ⬜ | 14-18 |
 
 ---
 
-## 8. Distribución de Horas (Total: 324 horas)
+## 7. Distribución de Horas
 
-| Fase | Semanas | Horas/Sem | Total Hrs | % |
-|------|:-------:|:---------:|:---------:|:-:|
-| Diseño | 4 | 18 | 72 | 22% |
+| Fase | Semanas | Horas/Sem | Total | % |
+|------|:-------:|:---------:|:-----:|:-:|
+| Casos de Uso y Diseño | 4 | 18 | 72 | 22% |
 | Implementación | 4 | 18 | 72 | 22% |
 | Validación | 5 | 18 | 90 | 28% |
 | Documentación | 5 | 18 | 90 | 28% |
 | **TOTAL** | **18** | **18** | **324** | **100%** |
 
 ```
-  Diseño        ██████████████████████ 22%
-  Implementación██████████████████████ 22%
-  Validación    ████████████████████████████ 28%
-  Documentación ████████████████████████████ 28%
+Casos de Uso+Diseño █████████████████████ 22%
+Implementación      █████████████████████ 22%
+Validación          ███████████████████████████ 28%
+Documentación       ███████████████████████████ 28%
 ```
 
 ---
 
-## 9. Próximos Pasos (Semana 1)
+## 8. Cronograma Visual Simplificado
 
-| # | Tarea | Prioridad | Duración Est. |
-|:-:|-------|:---------:|:-------------:|
-| 1 | Diseñar tipos de mensaje del protocolo | 🔴 Alta | 4 h |
-| 2 | Definir estructura del header (4 bytes) | 🔴 Alta | 2 h |
-| 3 | Diseñar payload LOCATION (12 bytes) | 🔴 Alta | 3 h |
-| 4 | Crear archivo `protocol.h` | 🟡 Media | 3 h |
-| 5 | Documentar protocolo en Markdown | 🟡 Media | 4 h |
-| 6 | Configurar repositorio Git | 🟢 Baja | 2 h |
-
----
-
-## 10. Checklist Semanal
-
-### ☐ Semana 1 (Febrero)
-- [ ] Protocolo P2P documentado
-- [ ] Estructura payload definida
-- [ ] Archivo `protocol.h` creado
-- [ ] Repositorio Git configurado
-
-### ☐ Semana 2 (Febrero)
-- [ ] Análisis SF vs ToA completado
-- [ ] Código LoRa TX básico funcionando
-- [ ] Código LoRa RX básico funcionando
-- [ ] Primera transmisión exitosa
-
-### ☐ Semana 3 (Febrero)
-- [ ] Pruebas RSSI/SNR en lab
-- [ ] Parámetros LoRa ajustados
-- [ ] Ping-pong funcionando estable
-- [ ] Documentación de pruebas
-
-### ☐ Semana 4 (Febrero)
-- [ ] Power budget calculado
-- [ ] Máquina de estados diseñada (UML)
-- [ ] Diagrama de arquitectura final
-- [ ] **🎯 HITO 1 completado**
+```
+         FEBRERO 2026           MARZO 2026           ABRIL 2026           MAYO 2026
+    ┌───────────────────┐   ┌───────────────────┐   ┌───────────────────┐   ┌───────────────────┐
+    │                   │   │                   │   │                   │   │                   │
+    │  📋 CASOS DE USO  │   │  🔧 IMPLEMENTAR   │   │  🧪 VALIDAR       │   │  📝 DOCUMENTAR    │
+    │                   │   │                   │   │                   │   │                   │
+    │  • Casos de uso   │   │  • Código LoRa    │   │  • Pruebas lab    │   │  • Redactar       │
+    │  • Escenarios     │   │  • Integración    │   │  • Pruebas campo  │   │    tesis          │
+    │  • Revisión 📋    │   │  • Estados        │   │  • Métricas       │   │  • Presentación   │
+    │  • Protocolo      │   │  • UI completa    │   │  • Optimizar      │   │  • Sustentar      │
+    │                   │   │                   │   │                   │   │                   │
+    └─────────┬─────────┘   └─────────┬─────────┘   └─────────┬─────────┘   └─────────┬─────────┘
+              │                       │                       │                       │
+              ▼                       ▼                       ▼                       ▼
+         🎯 HITO 1              🎯 HITO 2              🎯 HITO 3              🎯 HITO 4
+      Casos de Uso           Prototipo OK          Validación OK          Tesis OK
+        Aprobados
+```
 
 ---
 
-*Documento generado: Enero 2026 | Versión: 1.0*
+## 9. Próximos Pasos Inmediatos (Semana Actual)
+
+| # | Tarea | Prioridad | Estado |
+|:-:|-------|:---------:|:------:|
+| 1 | Finalizar documento de Casos de Uso v2 | 🔴 Alta | 🔄 |
+| 2 | Completar escenarios de falla (FA-01 a FA-06) | 🔴 Alta | 🔄 |
+| 3 | Crear matriz de respuestas del sistema | 🔴 Alta | ⬜ |
+| 4 | Preparar preguntas para revisión con director | 🟡 Media | ⬜ |
+| 5 | Agendar reunión de revisión (Semana 2) | 🟡 Media | ⬜ |
+
+---
+
+## 10. Herramientas y Recursos
+
+| Herramienta | Uso | Estado |
+|-------------|-----|:------:|
+| **PlatformIO + VS Code** | Desarrollo de firmware | ✅ Configurado |
+| **GitHub** | Control de versiones | ✅ Repositorio creado |
+| **Overleaf** | Documento de tesis | ⬜ Director creará proyecto |
+| **Draw.io / Mermaid** | Diagramas UML | ✅ Disponible |
+| **Excel** | Análisis de datos | ✅ Disponible |
+
+---
+
+*Documento actualizado: Febrero 2026 | Versión: 2.0*  
+*Cambio principal: Casos de Uso primero, código después*
