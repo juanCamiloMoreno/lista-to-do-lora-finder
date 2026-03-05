@@ -1,0 +1,29 @@
+# ── PlatformIO ──
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# ── VS Code ──
+.vscode/
+!.vscode/extensions.json
+
+# ── Build artifacts ──
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ── Python ──
+__pycache__/
+*.pyc
+.env
+
+# ── IDE ──
+*.code-workspace
