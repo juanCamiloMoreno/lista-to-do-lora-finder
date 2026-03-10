@@ -4,13 +4,22 @@
 #include <stdbool.h>
 
 typedef struct {
-    float heading;  /* degrees 0-360 */
-    float x;
-    float y;
-    float z;
+    float heading;  /* grados magnéticos 0-360 (N=0, E=90) */
+    int   x;        /* valor crudo magnetómetro X */
+    int   y;
+    int   z;
 } compass_data_t;
 
 bool compass_init(void);
 bool compass_read(compass_data_t *out);
+
+/* Dibuja la UI de brújula en el display (requiere display_init previo) */
+void compass_draw_ui(float heading_deg, int cx, int cy, int radius);
+
+/* Flecha delgada (1 px) apuntando en 'angle_deg' desde el centro */
+void compass_draw_arrow(int cx, int cy, float angle_deg, int length);
+
+/* Flecha gruesa (3 px) apuntando en 'angle_deg' */
+void compass_draw_arrow_thick(int cx, int cy, float angle_deg, int length);
 
 #endif /* COMPASS_H */
