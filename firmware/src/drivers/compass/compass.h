@@ -13,6 +13,11 @@ typedef struct {
 bool compass_init(void);
 bool compass_read(compass_data_t *out);
 
+/* Calibración hard-iron — bloquea ~15 s, guarda en flash */
+bool compass_calibrate(void);
+/* true si ya existe calibración guardada en NVS */
+bool compass_has_calibration(void);
+
 /* Dibuja la UI de brújula en el display (requiere display_init previo) */
 void compass_draw_ui(float heading_deg, int cx, int cy, int radius);
 

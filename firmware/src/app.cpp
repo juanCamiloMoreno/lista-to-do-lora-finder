@@ -16,11 +16,20 @@ void app_init(void)
     Serial.begin(115200);
     delay(300);
 
-    display_init();
+    if (!display_init()) {
+        Serial.println("[app] display_init fallo — revisa pines/OLED");
+    }
     compass_init();
-    /* gps_init(); */   /* Descomentar cuando se conecte el GPS */
+    gps_init();
+
+    /* Calibrar si no hay datos guardados */
+    if (!compass_has_calibration()) {
+        Serial.println("[app] Sin calibracion — iniciando calibracion...");
+        compass_calibrate();
+    }
 
     /* Pantalla de bienvenida */
+    Serial.println("[app] Mostrando splash...");
     display_clear();
     display_print_medium(0, 20, "LoRa Finder");
     display_print_small (0, 40, "Iniciando...");

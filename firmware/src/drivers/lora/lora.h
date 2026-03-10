@@ -2,6 +2,7 @@
 #define LORA_H
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 bool lora_init(void);

@@ -8,10 +8,14 @@
 /* Power rail para OLED y sensores (LOW = encendido) */
 #define VEXT_ENABLE  36
 
-/* Bus I2C — compartido por OLED (SSD1306) y compás (QMC5883L) */
-#define OLED_SDA     41
-#define OLED_SCL     42
+/* Bus I2C 0 (Wire)  — OLED SSD1306 */
+#define OLED_SDA     17
+#define OLED_SCL     18
 #define OLED_RST     21
+
+/* Bus I2C 1 (Wire1) — Compás QMC5883L */
+#define MAG_SDA      5
+#define MAG_SCL      6
 
 #define I2C_SDA      OLED_SDA
 #define I2C_SCL      OLED_SCL
