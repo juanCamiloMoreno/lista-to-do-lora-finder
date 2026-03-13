@@ -51,16 +51,27 @@ void app_run(void)
                     COMPASS_UI_CY,
                     COMPASS_UI_RADIUS);
 
-    /* ── Panel izquierdo: datos numéricos ── */
+    /* ── Panel izquierdo: heading + GPS ── */
     char buf[24];
 
-    display_print_small(2, 10, "NORTE MAG.");
+    gps_update();
+    gps_data_t gps = gps_get_data();
 
     snprintf(buf, sizeof(buf), "%3d deg", (int)_compass.heading);
-    display_print_medium(2, 30, buf);
+    display_print_medium(2, 10, buf);
 
-    snprintf(buf, sizeof(buf), "X:%-5d Y:%d", _compass.x, _compass.y);
-    display_print_small(2, 55, buf);
+    if (gps.valid) {
+        snprintf(buf, sizeof(buf), "%.5f", gps.latitude);
+        display_print_small(2, 36, buf);
+        snprintf(buf, sizeof(buf), "%.5f", gps.longitude);
+        display_print_small(2, 46, buf);
+        snprintf(buf, sizeof(buf), "Sat:%d", gps.satellites);
+        display_print_small(2, 57, buf);
+    } else {
+        display_print_small(2, 38, "GPS buscando");
+        snprintf(buf, sizeof(buf), "Sat:%d", gps.satellites);
+        display_print_small(2, 50, buf);
+    }
 
     display_update();
 
