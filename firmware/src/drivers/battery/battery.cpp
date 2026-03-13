@@ -5,9 +5,11 @@
 #include <stdio.h>
 
 /*
- * BAT_ADC_PIN  (GPIO1)  → ADC1_CH0: voltaje batería vía divisor 1:2 del PCB
- *                          Vbat_real = Vadc × 2
- * BAT_CHRG_PIN (GPIO7)  → CHRG del TP4054 (open-drain, LOW = cargando)
+ * Heltec WiFi LoRa 32 V4 — medición de batería:
+ *   BAT_CTRL_PIN (GPIO37) OUTPUT HIGH  → habilita el divisor resistivo
+ *   BAT_ADC_PIN  (GPIO1)  ADC1_CH0     → lectura del divisor
+ *   Atenuación 2.5 dB (divisor de alta impedancia)
+ *   Vbat_real = Vadc_mV × 4.9 × 1.045 / 1000
  */
 
 /* ── Umbrales de la celda LiPo 1S ──────────────────────────────────────── */
@@ -15,27 +17,20 @@
 #define BAT_VMIN      3.00f   /*   0 % — vacía (corte de seguridad) */
 #define BAT_VFULL     4.15f   /* A partir de aquí se considera "lleno" */
 
-/* ── Calibración ADC ─────────────────────────────────────────────────────
- * ESP32-S3: referencia interna ~3.3 V, resolución 12 bits (0-4095).
- * Usamos analogReadMilliVolts() que incluye la corrección de linealidad
- * del IDF, así que solo aplicamos el factor del divisor.
- * ─────────────────────────────────────────────────────────────────────── */
-#define ADC_SAMPLES   8   /* Promediado para reducir ruido */
-
-/* ── Estado interno ─────────────────────────────────────────────────────── */
-static bool _chrg_pin_ok = false;  /* false si el pin no está disponible */
+#define ADC_SAMPLES      8       /* Promediado para reducir ruido */
+#define ADC_MULTIPLIER   5.1205f /* 4.9 × 1.045 — ratio del divisor del V4 */
 
 /* ── Implementación ─────────────────────────────────────────────────────── */
 
 void battery_init(void)
 {
-    /* ADC: atenuación 11 dB → rango ~0-3.3 V */
-    analogSetAttenuation(ADC_11db);
-    pinMode(BAT_ADC_PIN, INPUT);
+    /* GPIO37 HIGH habilita el divisor resistivo de batería en el V4 */
+    pinMode(BAT_CTRL_PIN, OUTPUT);
+    digitalWrite(BAT_CTRL_PIN, HIGH);
 
-    /* Pin de detección de carga con pull-up interno */
-    pinMode(BAT_CHRG_PIN, INPUT_PULLUP);
-    _chrg_pin_ok = true;
+    /* Atenuación 2.5 dB: divisor de alta impedancia, rango ~0-1 V en el ADC */
+    analogSetPinAttenuation(BAT_ADC_PIN, ADC_2_5db);
+    pinMode(BAT_ADC_PIN, INPUT);
 }
 
 static float _read_voltage(void)
@@ -46,8 +41,7 @@ static float _read_voltage(void)
     }
     float vadc_mv = (float)sum / ADC_SAMPLES;
 
-    /* El divisor 1:2 del PCB divide el voltaje a la mitad → multiplicamos ×2 */
-    return (vadc_mv * 2.0f) / 1000.0f;   /* → Voltios */
+    return (vadc_mv * ADC_MULTIPLIER) / 1000.0f;   /* → Voltios */
 }
 
 static uint8_t _voltage_to_percent(float v)
@@ -67,25 +61,39 @@ void battery_read(battery_data_t *out)
     out->voltage = _read_voltage();
     out->percent = _voltage_to_percent(out->voltage);
 
-    /* Detección de estado de carga */
-    if (_chrg_pin_ok && digitalRead(BAT_CHRG_PIN) == LOW) {
-        out->status = BAT_STATUS_CHARGING;
-    } else if (out->voltage >= BAT_VFULL) {
+    /* Detección de estado de carga por voltaje
+     * (sin pin CHRG confirmado en V4)
+     * ─ Si el voltaje sube respecto a la lectura anterior → cargando
+     * ─ Si ya alcanzó BAT_VFULL → lleno
+     */
+    static float _prev_voltage = 0.0f;
+    static uint32_t _prev_ts    = 0;
+
+    uint32_t now = millis();
+    bool rising = false;
+    if (_prev_ts > 0 && (now - _prev_ts) >= 4000) {
+        rising = (out->voltage - _prev_voltage) > 0.005f;  /* +5 mV en 4 s */
+    }
+    if ((now - _prev_ts) >= 4000) {
+        _prev_voltage = out->voltage;
+        _prev_ts      = now;
+    }
+    if (_prev_ts == 0) _prev_ts = now;
+
+    if (out->voltage >= BAT_VFULL) {
         out->status = BAT_STATUS_FULL;
+    } else if (rising) {
+        out->status = BAT_STATUS_CHARGING;
     } else {
         out->status = BAT_STATUS_DISCHARGING;
     }
 
-    /* ── Debug: imprime cada 2 s para diagnóstico de pines ── */
+    /* ── Debug: voltaje cada 5 s ── */
     static uint32_t _last_print = 0;
-    if (millis() - _last_print >= 2000) {
+    if (millis() - _last_print >= 5000) {
         _last_print = millis();
-        uint32_t raw_mv = analogReadMilliVolts(BAT_ADC_PIN);
-        Serial.printf("[bat] GPIO%d raw=%lumV  Vbat=%.3fV  pct=%d%%  "
-                      "CHRG(GPIO%d)=%d\n",
-                      BAT_ADC_PIN, raw_mv,
-                      out->voltage, out->percent,
-                      BAT_CHRG_PIN, digitalRead(BAT_CHRG_PIN));
+        Serial.printf("[bat] %.3fV  %d%%  status=%d\n",
+                      out->voltage, out->percent, (int)out->status);
     }
 }
 

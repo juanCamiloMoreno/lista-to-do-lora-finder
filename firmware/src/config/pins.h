@@ -33,8 +33,8 @@
 #define GPS_RX_PIN   33
 #define GPS_TX_PIN   34
 
-/* Batería */
-#define BAT_ADC_PIN   1   /* ADC1_CH0 — voltaje batería (divisor 1:2 en PCB) */
-#define BAT_CHRG_PIN  7   /* CHRG TP4054 — LOW = cargando */
+/* Batería (Heltec WiFi LoRa 32 V4) */
+#define BAT_ADC_PIN   1   /* GPIO1 ADC1_CH0 — entrada del divisor */
+#define BAT_CTRL_PIN  37  /* GPIO37 OUTPUT HIGH habilita el divisor */
 
 #endif /* PINS_H */

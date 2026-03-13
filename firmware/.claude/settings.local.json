@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(find C:UsersjuancDocumentsPlatformIOProjectsbase1lista-to-do-lora-finder -type f \\\\\\(-name *.h -o -name *.cpp -o -name *.md -o -name *.txt \\\\\\))",
+      "Read(//c/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/**)"
+    ]
+  }
+}
