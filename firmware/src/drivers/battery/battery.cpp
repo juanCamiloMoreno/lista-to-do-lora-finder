@@ -8,8 +8,8 @@
  * Heltec WiFi LoRa 32 V4 — medición de batería:
  *   BAT_CTRL_PIN (GPIO37) OUTPUT HIGH  → habilita el divisor resistivo
  *   BAT_ADC_PIN  (GPIO1)  ADC1_CH0     → lectura del divisor
- *   Atenuación 2.5 dB (divisor de alta impedancia)
- *   Vbat_real = Vadc_mV × 4.9 × 1.045 / 1000
+ *   Atenuación 2.5 dB  (divisor alta impedancia, Vadc_max ≈ 0.86 V)
+ *   Vbat_real = Vadc_mV × 4.9 / 1000   (confirmado con ejemplo oficial Heltec)
  */
 
 /* ── Umbrales de la celda LiPo 1S ──────────────────────────────────────── */
@@ -18,7 +18,7 @@
 #define BAT_VFULL     4.15f   /* A partir de aquí se considera "lleno" */
 
 #define ADC_SAMPLES      8       /* Promediado para reducir ruido */
-#define ADC_MULTIPLIER   5.1205f /* 4.9 × 1.045 — ratio del divisor del V4 */
+#define ADC_MULTIPLIER   4.9f    /* ratio del divisor del V4 (490/100) */
 
 /* ── Implementación ─────────────────────────────────────────────────────── */
 
@@ -88,13 +88,6 @@ void battery_read(battery_data_t *out)
         out->status = BAT_STATUS_DISCHARGING;
     }
 
-    /* ── Debug: voltaje cada 5 s ── */
-    static uint32_t _last_print = 0;
-    if (millis() - _last_print >= 5000) {
-        _last_print = millis();
-        Serial.printf("[bat] %.3fV  %d%%  status=%d\n",
-                      out->voltage, out->percent, (int)out->status);
-    }
 }
 
 /* ── Ícono gráfico de batería ────────────────────────────────────────────
