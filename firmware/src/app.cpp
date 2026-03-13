@@ -3,11 +3,13 @@
 #include "drivers/display/display.h"
 #include "drivers/compass/compass.h"
 #include "drivers/gps/gps.h"
+#include "drivers/battery/battery.h"
 
 #include <Arduino.h>
 #include <stdio.h>
 
 static compass_data_t _compass;
+static battery_data_t _battery;
 
 /* ── Inicialización (llamado una sola vez desde setup()) ─────────────── */
 
@@ -21,6 +23,7 @@ void app_init(void)
     }
     compass_init();
     gps_init();
+    battery_init();
 
     /* Calibrar si no hay datos guardados */
     if (!compass_has_calibration()) {
@@ -42,6 +45,7 @@ void app_init(void)
 void app_run(void)
 {
     compass_read(&_compass);
+    battery_read(&_battery);
 
     display_clear();
 
@@ -51,14 +55,17 @@ void app_run(void)
                     COMPASS_UI_CY,
                     COMPASS_UI_RADIUS);
 
-    /* ── Panel izquierdo: heading + GPS ── */
+    /* ── Panel izquierdo: heading + batería + GPS ── */
     char buf[24];
+
+    /* Ícono gráfico de batería: cuerpo + relleno + % */
+    battery_draw_icon(0, 0, &_battery);
 
     gps_update();
     gps_data_t gps = gps_get_data();
 
     snprintf(buf, sizeof(buf), "%3d deg", (int)_compass.heading);
-    display_print_medium(2, 10, buf);
+    display_print_small(2, 20, buf);
 
     if (gps.valid) {
         snprintf(buf, sizeof(buf), "%.5f", gps.latitude);

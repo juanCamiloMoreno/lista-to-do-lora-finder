@@ -33,4 +33,8 @@
 #define GPS_RX_PIN   33
 #define GPS_TX_PIN   34
 
+/* Batería */
+#define BAT_ADC_PIN   1   /* ADC1_CH0 — voltaje batería (divisor 1:2 en PCB) */
+#define BAT_CHRG_PIN  7   /* CHRG TP4054 — LOW = cargando */
+
 #endif /* PINS_H */
