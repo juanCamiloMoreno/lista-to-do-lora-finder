@@ -56,6 +56,7 @@ static void _draw_home(void)
 void role_manager_init(void)
 {
     _role = ROLE_NONE;
+    power_standby_init();
 }
 
 void role_manager_update(void)
@@ -75,31 +76,41 @@ void role_manager_update(void)
         float      snr;
         if (lora_comm_receive(&msg, &rssi, &snr)) {
             if (msg.msg_type == (uint8_t)MSG_SEARCH_START) {
+                power_standby_reset();   /* reactivar pantalla antes de cambiar rol */
                 _role = ROLE_TARGET;
                 fsm_target_init(&msg, rssi);
                 alert_beep_short();
                 return;
             }
+            /* Cualquier otro paquete recibido también despierta la pantalla */
+            power_standby_reset();
         }
 
-        /* ¿Presionó [DOWN]? → Menú de pruebas */
-        if (btn_pressed(BTN_DOWN)) {
-            _role = ROLE_TEST_MENU;
-            test_menu_init();
-            return;
+        /* Cualquier botón presionado reactiva la pantalla */
+        bool up  = btn_pressed(BTN_UP);
+        bool dn  = btn_pressed(BTN_DOWN);
+        bool sel = btn_pressed(BTN_SELECT);
+
+        if (up || dn || sel) {
+            power_standby_reset();
         }
 
-        /* ¿Presionó [SELECT]? → SEARCHER */
-        if (btn_pressed(BTN_SELECT)) {
-            _role = ROLE_SEARCHER;
-            fsm_searcher_init();
-            return;
+        /* Si la pantalla estaba apagada, el primer toque solo la reactiva */
+        if (!power_standby_active()) {
+            if (dn) {
+                _role = ROLE_TEST_MENU;
+                test_menu_init();
+                return;
+            }
+            if (sel) {
+                _role = ROLE_SEARCHER;
+                fsm_searcher_init();
+                return;
+            }
+            _draw_home();
         }
 
-        _draw_home();
-
-        /* Light sleep ≤1 s — wakeup anticipado por botón o paquete LoRa */
-        power_idle_sleep(1000);
+        power_standby_tick();   /* apaga pantalla si se agotó el timeout */
         break;
     }
 
@@ -108,6 +119,7 @@ void role_manager_update(void)
         fsm_searcher_update();
         if (fsm_searcher_is_done()) {
             _role = ROLE_NONE;
+            power_standby_init();
             /* Pantalla breve de retorno */
             display_clear();
             display_print_medium(15, 24, "LoRa Finder");
@@ -122,6 +134,7 @@ void role_manager_update(void)
         fsm_target_update();
         if (fsm_target_is_done()) {
             _role = ROLE_NONE;
+            power_standby_init();
             display_clear();
             display_print_medium(15, 24, "LoRa Finder");
             display_print_small (0,  42, "Sesion terminada");
@@ -135,6 +148,7 @@ void role_manager_update(void)
         test_menu_update();
         if (test_menu_is_done()) {
             _role = ROLE_NONE;
+            power_standby_init();
         }
         break;
     }

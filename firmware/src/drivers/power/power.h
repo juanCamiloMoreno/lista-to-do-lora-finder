@@ -1,19 +1,15 @@
 #pragma once
-#include <stdint.h>
+#include <stdbool.h>
 
 /* ─────────────────────────────────────────────────────────────────────────
- * Gestión de energía — light sleep durante ROLE_NONE
+ * Modo reposo de pantalla — ROLE_NONE
  *
- * Fuentes de wakeup configuradas:
- *   • GPIO LOW  — BTN_UP, BTN_DOWN, BTN_SELECT (pull-up, presionado = LOW)
- *   • GPIO HIGH — LORA_DIO1  (SX1262 lo pone HIGH al recibir un paquete)
- *   • Timer     — max_ms ms para refrescar GPS + pantalla
- *
- * Consumo estimado en light sleep:
- *   ~2-5 mA CPU + ~1.5 mA SX1262 RX + ~0.5 mA OLED ≈ 5 mA total
- *   vs ~180 mA en plena operación
+ * Si no hay actividad (botón o paquete LoRa) durante STANDBY_TIMEOUT_MS,
+ * se apaga el panel OLED (setPowerSave). El CPU y el LoRa siguen activos.
+ * Cualquier botón o paquete entrante reactiva la pantalla.
  * ───────────────────────────────────────────────────────────────────────── */
 
-void     power_init(void);
-void     power_idle_sleep(uint32_t max_ms); /* duerme hasta max_ms o evento */
-uint32_t power_total_sleep_ms(void);        /* diagnóstico: tiempo total dormido */
+void power_standby_init(void);       /* llamar al entrar en ROLE_NONE      */
+void power_standby_reset(void);      /* hay actividad → reiniciar timeout  */
+void power_standby_tick(void);       /* llamar cada ciclo de ROLE_NONE     */
+bool power_standby_active(void);     /* true = pantalla apagada            */

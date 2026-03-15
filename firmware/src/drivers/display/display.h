@@ -8,6 +8,8 @@
 bool display_init(void);
 void display_clear(void);
 void display_update(void);   /* flush buffer → pantalla */
+void display_off(void);      /* apaga el panel (modo reposo) */
+void display_on(void);       /* enciende el panel */
 
 /* ── Texto ───────────────────────────────────────────────────────────── */
 void display_print_small (int x, int y, const char *text); /* font 5x7  */

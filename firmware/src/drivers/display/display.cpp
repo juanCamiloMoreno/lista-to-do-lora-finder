@@ -30,6 +30,8 @@ bool display_init(void)
 
 void display_clear(void)  { u8g2.clearBuffer(); }
 void display_update(void) { u8g2.sendBuffer();  }
+void display_off(void)    { u8g2.setPowerSave(1); }
+void display_on(void)     { u8g2.setPowerSave(0); }
 
 /* ── Texto ────────────────────────────────────────────────────────────── */
 
