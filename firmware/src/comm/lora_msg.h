@@ -14,6 +14,9 @@ typedef enum : uint8_t {
     MSG_SOS_ALERT       = 0x05,  /* Objetivo → Buscador: emergencia        */
     MSG_SOS_CANCEL      = 0x06,  /* Objetivo → Buscador: cancela SOS       */
     MSG_REUNITE_CONFIRM = 0x07,  /* Cualquiera → otro: confirmación reunión */
+    /* ── Mensajes de prueba de campo ─────────────────────────────────── */
+    MSG_TEST_PING       = 0x10,  /* Prueba TX → broadcast PING             */
+    MSG_TEST_PONG       = 0x11,  /* Prueba RX → respuesta al PING          */
 } lora_msg_type_t;
 
 typedef struct __attribute__((packed)) {

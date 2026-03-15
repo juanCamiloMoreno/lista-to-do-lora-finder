@@ -20,6 +20,7 @@ static SX1262 _radio = new Module(LORA_CS, LORA_DIO1, LORA_RST, LORA_BUSY, _spi)
 static bool            _ready        = false;
 static bool            _in_rx        = false;
 static volatile bool   _pkt_flag     = false;   /* seteado desde ISR al llegar paquete */
+static uint8_t         _current_sf   = LORA_SF;
 
 static void IRAM_ATTR _on_rx(void) { _pkt_flag = true; }
 
@@ -122,3 +123,19 @@ int lora_receive(uint8_t *buf, size_t max_len,
 }
 
 bool lora_is_ready(void) { return _ready; }
+
+bool lora_set_sf(uint8_t sf)
+{
+    if (!_ready || sf < 7 || sf > 12) return false;
+    int state = _radio.setSpreadingFactor(sf);
+    if (state != RADIOLIB_ERR_NONE) {
+        Serial.printf("[lora] set SF error: %d\n", state);
+        return false;
+    }
+    _current_sf = sf;
+    _in_rx = false;
+    Serial.printf("[lora] SF cambiado a SF%d  ToA~%lums\n", sf, (unsigned long)(((1u<<sf)*8u*(13u + ((8u*17u - 4u*sf + 44u + 4u*(sf)-1u)/(4u*(sf)))*5u))/1000u));
+    return lora_start_rx();
+}
+
+uint8_t lora_get_sf(void) { return _current_sf; }

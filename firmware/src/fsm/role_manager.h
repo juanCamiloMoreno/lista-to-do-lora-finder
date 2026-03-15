@@ -13,9 +13,10 @@
  * ───────────────────────────────────────────────────────────────────────── */
 
 typedef enum {
-    ROLE_NONE     = 0,   /* Pantalla de inicio — esperando activación */
-    ROLE_SEARCHER = 1,   /* Ejecutando FSM del Buscador               */
-    ROLE_TARGET   = 2,   /* Ejecutando FSM del Objetivo               */
+    ROLE_NONE      = 0,  /* Pantalla de inicio — esperando activación */
+    ROLE_SEARCHER  = 1,  /* Ejecutando FSM del Buscador               */
+    ROLE_TARGET    = 2,  /* Ejecutando FSM del Objetivo               */
+    ROLE_TEST_MENU = 3,  /* Menú de pruebas de campo                  */
 } node_role_t;
 
 void        role_manager_init(void);

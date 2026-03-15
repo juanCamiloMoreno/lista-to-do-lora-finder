@@ -1,7 +1,9 @@
 #include "role_manager.h"
 #include "fsm_searcher.h"
 #include "fsm_target.h"
+#include "test_menu.h"
 #include "comm/lora_comm.h"
+#include "config/system_config.h"
 #include "drivers/display/display.h"
 #include "drivers/compass/compass.h"
 #include "drivers/gps/gps.h"
@@ -44,7 +46,7 @@ static void _draw_home(void)
 
     compass_draw_ui(cmp.heading, COMPASS_UI_CX, COMPASS_UI_CY, COMPASS_UI_RADIUS);
 
-    display_print_small(0, 57, "[OK]=Buscar");
+    display_print_small(0, 57, "[OK]=Buscar [v]=Tests");
     display_update();
 }
 
@@ -77,6 +79,13 @@ void role_manager_update(void)
                 alert_beep_short();
                 return;
             }
+        }
+
+        /* ¿Presionó [DOWN]? → Menú de pruebas */
+        if (btn_pressed(BTN_DOWN)) {
+            _role = ROLE_TEST_MENU;
+            test_menu_init();
+            return;
         }
 
         /* ¿Presionó [SELECT]? → SEARCHER */
@@ -114,6 +123,14 @@ void role_manager_update(void)
             display_print_small (0,  42, "Sesion terminada");
             display_update();
             delay(1500);
+        }
+        break;
+
+    /* ── MENÚ DE PRUEBAS ──────────────────────────────────────────────── */
+    case ROLE_TEST_MENU:
+        test_menu_update();
+        if (test_menu_is_done()) {
+            _role = ROLE_NONE;
         }
         break;
     }

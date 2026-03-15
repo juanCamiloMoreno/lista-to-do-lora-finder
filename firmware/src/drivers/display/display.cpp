@@ -7,7 +7,7 @@
 #include <U8g2lib.h>
 
 /* SSD1306 128x64 — I2C hardware, buffer completo (pines explícitos) */
-static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, OLED_RST, OLED_SCL, OLED_SDA);
+static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R2, OLED_RST, OLED_SCL, OLED_SDA);
 
 /* ── Ciclo de vida ────────────────────────────────────────────────────── */
 

@@ -25,3 +25,7 @@ bool     lora_comm_receive(lora_msg_t *msg_out,
 
 /* ID único de este dispositivo (últimos 4 bytes del MAC de la flash) */
 uint32_t lora_comm_device_id(void);
+
+/* Cambia el Spreading Factor en caliente (7–12) y reinicia RX */
+bool     lora_comm_set_sf(uint8_t sf);
+uint8_t  lora_comm_get_sf(void);

@@ -28,6 +28,9 @@ void lora_comm_tick(void)
 
 uint32_t lora_comm_device_id(void) { return _device_id; }
 
+bool    lora_comm_set_sf(uint8_t sf) { return lora_set_sf(sf); }
+uint8_t lora_comm_get_sf(void)       { return lora_get_sf();   }
+
 bool lora_comm_send(const lora_msg_t *msg)
 {
     bool ok = lora_send((const uint8_t *)msg, sizeof(lora_msg_t));
