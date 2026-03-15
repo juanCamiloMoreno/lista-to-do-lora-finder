@@ -61,6 +61,7 @@ void role_manager_init(void)
 
 void role_manager_update(void)
 {
+    btn_update();   /* fallback polling — complementa ISR para GPIO problemáticos */
     alert_tick();
 
     switch (_role) {

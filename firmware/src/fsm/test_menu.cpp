@@ -1,4 +1,5 @@
 #include "test_menu.h"
+#include "debug_menu.h"
 #include "comm/lora_comm.h"
 #include "comm/lora_msg.h"
 #include "config/system_config.h"
@@ -21,10 +22,11 @@ typedef enum {
     TM_RTT,
     TM_GPS,
     TM_CONFIG_SF,
+    TM_DEBUG,
 } tm_state_t;
 
 /* ── Menú ─────────────────────────────────────────────────────────────── */
-#define MENU_COUNT   6
+#define MENU_COUNT   7
 #define MENU_VISIBLE 4
 static const char * const _items[MENU_COUNT] = {
     "Alcance/RSSI",
@@ -32,6 +34,7 @@ static const char * const _items[MENU_COUNT] = {
     "T. Respuesta",
     "Precision GPS",
     "Config SF",
+    "Debug HW",
     "<< Volver",
 };
 
@@ -378,7 +381,11 @@ void test_menu_update(void)
                 _cfg_sf      = lora_comm_get_sf();
                 _cfg_applied = false;
                 break;
-            case 5:   /* Volver */
+            case 5:
+                _state = TM_DEBUG;
+                debug_menu_init();
+                break;
+            case 6:   /* Volver */
                 _done = true;
                 return;
             }
@@ -462,6 +469,15 @@ void test_menu_update(void)
             alert_beep_short();
         }
         _draw_config_sf();
+        return;
+    }
+
+    /* ── Debug HW ─────────────────────────────────────────────────────── */
+    if (_state == TM_DEBUG) {
+        debug_menu_update();
+        if (debug_menu_is_done()) {
+            _state = TM_MENU;
+        }
         return;
     }
 }
