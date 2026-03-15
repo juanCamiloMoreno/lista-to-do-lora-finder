@@ -3,11 +3,11 @@
 #include "../../config/system_config.h"
 
 #include <Arduino.h>
-#include <Wire.h>
+#include <Wire.h>   /* para Wire.setClock() compartido con el compás */
 #include <U8g2lib.h>
 
-/* SSD1306 128x64 — I2C hardware, buffer completo */
-static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, OLED_RST);
+/* SSD1306 128x64 — I2C hardware, buffer completo (pines explícitos) */
+static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, OLED_RST, OLED_SCL, OLED_SDA);
 
 /* ── Ciclo de vida ────────────────────────────────────────────────────── */
 
@@ -18,11 +18,13 @@ bool display_init(void)
     digitalWrite(VEXT_ENABLE, LOW);   /* LOW = ON */
     delay(100);
 
-    Wire.begin(OLED_SDA, OLED_SCL);
-    Wire.setClock(I2C_CLOCK_HZ);
-
+    /* U8g2 maneja Wire internamente (pines en el constructor) */
     u8g2.begin();
     u8g2.setContrast(255);
+
+    /* Dejar Wire disponible para el compás (mismo bus) */
+    Wire.setClock(I2C_CLOCK_HZ);
+
     return true;
 }
 
