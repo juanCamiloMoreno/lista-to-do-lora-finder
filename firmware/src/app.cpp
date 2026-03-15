@@ -10,6 +10,7 @@
 #include "drivers/led/led.h"
 #include "drivers/alert/alert.h"
 #include "drivers/btn/btn.h"
+#include "drivers/power/power.h"
 
 #include <Arduino.h>
 
@@ -52,6 +53,7 @@ void app_init(void)
     delay(800);
 
     role_manager_init();
+    power_init();
     Serial.println("[app] Sistema listo — en modo sin rol");
 }
 
@@ -60,5 +62,9 @@ void app_init(void)
 void app_run(void)
 {
     role_manager_update();
-    delay(40);
+    /* En ROLE_NONE el sleep se hace dentro de role_manager_update();
+     * los demás roles sólo necesitan un pequeño yield para el watchdog. */
+    if (role_manager_get_role() != ROLE_NONE) {
+        delay(20);
+    }
 }

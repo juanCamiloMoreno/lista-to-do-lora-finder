@@ -10,6 +10,7 @@
 #include "drivers/battery/battery.h"
 #include "drivers/btn/btn.h"
 #include "drivers/alert/alert.h"
+#include "drivers/power/power.h"
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -96,6 +97,9 @@ void role_manager_update(void)
         }
 
         _draw_home();
+
+        /* Light sleep ≤1 s — wakeup anticipado por botón o paquete LoRa */
+        power_idle_sleep(1000);
         break;
     }
 
