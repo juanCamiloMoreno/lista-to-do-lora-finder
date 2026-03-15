@@ -10,6 +10,7 @@
             "includePath": [
                 "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/include",
                 "C:/Users/juanc/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
+                "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/Adafruit NeoPixel",
                 "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/RadioLib/src",
                 "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/TinyGPSPlus/src",
                 "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/QMC5883LCompass/src",
@@ -253,6 +254,7 @@
                 "path": [
                     "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/include",
                     "C:/Users/juanc/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
+                    "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/Adafruit NeoPixel",
                     "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/RadioLib/src",
                     "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/TinyGPSPlus/src",
                     "C:/Users/juanc/Documents/PlatformIO/Projects/base1/lista-to-do-lora-finder/firmware/.pio/libdeps/heltec_wifi_lora_32_V4/QMC5883LCompass/src",

@@ -22,7 +22,9 @@
 #define COMPASS_I2C_ADDR    0x0D    /* Dirección I2C del QMC5883L */
 #define I2C_CLOCK_HZ        400000  /* 400 kHz Fast Mode */
 /* Filtro EMA sobre heading: 0.0 = máximo suavizado, 1.0 = sin filtro */
-#define COMPASS_FILTER_ALPHA  0.30f
+#define COMPASS_FILTER_ALPHA    0.20f
+/* Rechazo de outliers: muestras que salten más de este ángulo se descartan */
+#define COMPASS_OUTLIER_DEG    90.0f
 /* Duración del modo calibración en milisegundos */
 #define COMPASS_CALIB_MS      15000
 

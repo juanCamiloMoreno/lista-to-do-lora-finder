@@ -197,10 +197,27 @@ bool compass_read(compass_data_t *out)
     float cy = (float)ry - _offset_y;
 
     /* Filtro EMA sobre sin/cos (maneja el salto 0°/360°) */
-    static float _s = 0.0f, _c = 1.0f;
+    static float _s      = 0.0f;
+    static float _c      = 0.0f;   /* 0,0 = no inicializado */
+    static bool  _inited = false;
     float angle = atan2f(cy, cx);
-    _s = _s * (1.0f - COMPASS_FILTER_ALPHA) + sinf(angle) * COMPASS_FILTER_ALPHA;
-    _c = _c * (1.0f - COMPASS_FILTER_ALPHA) + cosf(angle) * COMPASS_FILTER_ALPHA;
+
+    if (!_inited) {
+        /* Primera lectura: cargar directamente sin filtrar ni rechazar */
+        _s      = sinf(angle);
+        _c      = cosf(angle);
+        _inited = true;
+    } else {
+        /* Outlier rejection: descartar si salta >COMPASS_OUTLIER_DEG */
+        float cur_h = atan2f(_s, _c);
+        float diff  = angle - cur_h;
+        while (diff >  (float)M_PI) diff -= 2.0f * (float)M_PI;
+        while (diff < -(float)M_PI) diff += 2.0f * (float)M_PI;
+        if (fabsf(diff) < COMPASS_OUTLIER_DEG * (float)M_PI / 180.0f) {
+            _s = _s * (1.0f - COMPASS_FILTER_ALPHA) + sinf(angle) * COMPASS_FILTER_ALPHA;
+            _c = _c * (1.0f - COMPASS_FILTER_ALPHA) + cosf(angle) * COMPASS_FILTER_ALPHA;
+        }
+    }
 
     float h = atan2f(_s, _c);
     if (h < 0) h += 2.0f * (float)M_PI;

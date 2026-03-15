@@ -17,8 +17,11 @@ static SPIClass _spi(FSPI);
  * ─────────────────────────────────────────────────────────────────────────── */
 static SX1262 _radio = new Module(LORA_CS, LORA_DIO1, LORA_RST, LORA_BUSY, _spi);
 
-static bool _ready   = false;
-static bool _in_rx   = false;
+static bool            _ready        = false;
+static bool            _in_rx        = false;
+static volatile bool   _pkt_flag     = false;   /* seteado desde ISR al llegar paquete */
+
+static void IRAM_ATTR _on_rx(void) { _pkt_flag = true; }
 
 /* ── Implementación ─────────────────────────────────────────────────────── */
 
@@ -42,6 +45,13 @@ bool lora_init(void)
         Serial.printf("[lora] init error: %d\n", state);
         _ready = false;
         return false;
+    }
+
+    /* TCXO 1.8 V por DIO3 — imprescindible en Heltec V4 para RX estable */
+    state = _radio.setTCXO(1.8f);
+    if (state != RADIOLIB_ERR_NONE) {
+        Serial.printf("[lora] setTCXO error: %d\n", state);
+        /* No fatal: continúa, pero RX puede ser poco fiable */
     }
 
     /* DIO2 como switch de antena RF (requerido en Heltec V4) */
@@ -73,12 +83,14 @@ bool lora_start_rx(void)
 {
     if (!_ready) return false;
 
+    _radio.setPacketReceivedAction(_on_rx);
     int state = _radio.startReceive();
     if (state != RADIOLIB_ERR_NONE) {
         Serial.printf("[lora] RX start error: %d\n", state);
         return false;
     }
-    _in_rx = true;
+    _pkt_flag = false;
+    _in_rx    = true;
     return true;
 }
 
@@ -87,8 +99,9 @@ int lora_receive(uint8_t *buf, size_t max_len,
 {
     if (!_ready || !_in_rx || !buf) return -1;
 
-    /* No bloqueante: verifica si hay paquete disponible */
-    if (!_radio.available()) return 0;
+    /* No bloqueante: flag seteado por ISR en DIO1 */
+    if (!_pkt_flag) return 0;
+    _pkt_flag = false;
 
     size_t pkt_len = _radio.getPacketLength();
     if (pkt_len == 0 || pkt_len > max_len) return 0;

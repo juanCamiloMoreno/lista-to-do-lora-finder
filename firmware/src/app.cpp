@@ -6,6 +6,8 @@
 #include "drivers/gps/gps.h"
 #include "drivers/battery/battery.h"
 #include "drivers/lora/lora.h"
+#include "drivers/led/led.h"
+#include "drivers/alert/alert.h"
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -13,6 +15,7 @@
 
 static compass_data_t _compass;
 static battery_data_t _battery;
+static uint32_t       _last_tx_ms = 0;  /* Para congelar compás post-TX */
 
 /* ── Paquete LoRa (mismo struct en sender y receiver) ────────────────── */
 typedef struct __attribute__((packed)) {
@@ -38,6 +41,8 @@ void app_init(void)
     compass_init();
     gps_init();
     battery_init();
+    led_init();
+    alert_init();
     lora_init();
 
 #if defined(NODE_ROLE_RECEIVER)
@@ -82,6 +87,8 @@ static void _lora_send_tick(void)
     pkt.bat_pct     = _battery.percent;
 
     bool ok = lora_send((const uint8_t *)&pkt, sizeof(pkt));
+    _last_tx_ms = millis();   /* Marcar fin de TX para el hold del compás */
+    if (ok) { led_flash_tx(); alert_tx(); }
     Serial.printf("[TX] seq=%lu  heading=%.1f  bat=%umV %u%%  %s\n",
                   (unsigned long)seq,
                   _compass.heading,
@@ -94,6 +101,15 @@ static void _lora_send_tick(void)
 #if defined(NODE_ROLE_RECEIVER)
 static void _lora_recv_tick(void)
 {
+    /* Heartbeat cada 5 s — re-arma RX por si el radio salió del modo */
+    static uint32_t last_hb = 0;
+    if (millis() - last_hb >= 5000) {
+        last_hb = millis();
+        lora_start_rx();
+        Serial.printf("[RX] esperando paquete... uptime=%lus\n",
+                      millis() / 1000UL);
+    }
+
     uint8_t  buf[sizeof(lora_pkt_t)];
     int16_t  rssi;
     float    snr;
@@ -108,6 +124,8 @@ static void _lora_recv_tick(void)
     lora_pkt_t pkt;
     memcpy(&pkt, buf, sizeof(pkt));
 
+    led_flash_rx();
+    alert_rx();
     Serial.printf("[RX] seq=%lu  heading=%.1f  bat=%umV %u%%"
                   "  RSSI=%d dBm  SNR=%.1f dB\n",
                   (unsigned long)pkt.seq,
@@ -121,7 +139,10 @@ static void _lora_recv_tick(void)
 
 void app_run(void)
 {
-    compass_read(&_compass);
+    /* Congelar compás 200 ms post-TX para evitar ruido del PA de LoRa */
+    if (millis() - _last_tx_ms > 200) {
+        compass_read(&_compass);
+    }
     battery_read(&_battery);
 
     display_clear();
@@ -163,6 +184,7 @@ void app_run(void)
     _lora_recv_tick();
 #endif
 
+    alert_tick();
     display_update();
 
     delay(60);
