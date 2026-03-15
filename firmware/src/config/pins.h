@@ -41,7 +41,7 @@
 #define RGB_LED_PIN   38
 
 /* Botones de navegación (pull-up interno, presionado = LOW) */
-#define BTN_UP_PIN      2
+#define BTN_UP_PIN     16
 #define BTN_DOWN_PIN    3
 #define BTN_SELECT_PIN  4
 

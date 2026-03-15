@@ -27,6 +27,12 @@ void power_standby_reset(void)
     }
 }
 
+void power_standby_force(void)
+{
+    display_off();
+    _screen_off = true;
+}
+
 void power_standby_tick(void)
 {
     if (!_screen_off && (millis() - _last_activity_ms >= STANDBY_TIMEOUT_MS)) {

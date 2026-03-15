@@ -66,17 +66,40 @@ static float    _lora_snr  = 0.0f;
  * Helpers de dibujo
  * ───────────────────────────────────────────────────────────────────── */
 
+#define DM_VISIBLE 3
+
 static void _draw_menu(void)
 {
     display_clear();
-    display_print_small(16, 9, "= Debug HW =");
-    for (int i = 0; i < DM_ITEM_COUNT; i++) {
-        int y = 20 + i * 9;
-        if (y > 62) break;
-        display_print_small(0, y, (_cursor == i) ? ">" : " ");
-        display_print_small(9, y, _items[i]);
+    display_print_small(22, 9, "= Debug HW =");
+
+    /* scroll simple: mostrar DM_VISIBLE ítems centrados en _cursor */
+    int scroll = _cursor - 1;
+    if (scroll < 0) scroll = 0;
+    if (scroll + DM_VISIBLE > DM_ITEM_COUNT) scroll = DM_ITEM_COUNT - DM_VISIBLE;
+
+    for (int i = 0; i < DM_VISIBLE; i++) {
+        int idx = scroll + i;
+        if (idx >= DM_ITEM_COUNT) break;
+        int y  = 24 + i * 15;
+        int fy = y - 12;
+        if (idx == _cursor) {
+            display_draw_box(0, fy, 128, 14);
+            display_set_font_mode(1);
+            display_set_draw_color(0);
+            display_print_medium(2, y, _items[idx]);
+            display_set_draw_color(1);
+            display_set_font_mode(0);
+        } else {
+            display_print_medium(2, y, _items[idx]);
+        }
     }
-    display_print_small(0, 62, "[OK]=entra");
+
+    if (scroll > 0)
+        display_print_small(120, 9, "^");
+    if (scroll + DM_VISIBLE < DM_ITEM_COUNT)
+        display_print_small(120, 62, "v");
+
     display_update();
 }
 

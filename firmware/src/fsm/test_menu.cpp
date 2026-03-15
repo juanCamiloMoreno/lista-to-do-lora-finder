@@ -27,7 +27,7 @@ typedef enum {
 
 /* ── Menú ─────────────────────────────────────────────────────────────── */
 #define MENU_COUNT   7
-#define MENU_VISIBLE 4
+#define MENU_VISIBLE 3
 static const char * const _items[MENU_COUNT] = {
     "Alcance/RSSI",
     "PDR paquetes",
@@ -164,17 +164,26 @@ static void _draw_menu(void)
 
     for (int i = 0; i < MENU_VISIBLE && (_scroll + i) < MENU_COUNT; i++) {
         int idx = _scroll + i;
-        int y   = 20 + i * 11;
-        display_print_small(0,  y, (idx == _cursor) ? ">" : " ");
-        display_print_small(9,  y, _items[idx]);
+        int y   = 24 + i * 15;   /* baseline — fuente 7x14 */
+        int fy  = y - 12;        /* esquina superior del item */
+
+        if (idx == _cursor) {
+            display_draw_box(0, fy, 128, 14);
+            display_set_font_mode(1);
+            display_set_draw_color(0);
+            display_print_medium(2, y, _items[idx]);
+            display_set_draw_color(1);
+            display_set_font_mode(0);
+        } else {
+            display_print_medium(2, y, _items[idx]);
+        }
     }
 
     if (_scroll > 0)
-        display_print_small(114, 9, "^");
+        display_print_small(120, 9, "^");
     if (_scroll + MENU_VISIBLE < MENU_COUNT)
-        display_print_small(114, 62, "v");
+        display_print_small(120, 62, "v");
 
-    display_print_small(0, 62, "[OK]=entra");
     display_update();
 }
 
@@ -324,6 +333,7 @@ void test_menu_init(void)
 
 void test_menu_update(void)
 {
+    btn_update();   /* polling BTN_UP (GPIO2) — sin ISR */
     gps_update();
     lora_comm_tick();
 

@@ -51,6 +51,14 @@ void display_print_medium(int x, int y, const char *text)
 
 void display_draw_circle(int x, int y, int r)
     { u8g2.drawCircle(x, y, r); }
+void display_draw_frame(int x, int y, int w, int h)
+    { u8g2.drawFrame(x, y, w, h); }
+void display_draw_box(int x, int y, int w, int h)
+    { u8g2.drawBox(x, y, w, h); }
+void display_set_draw_color(uint8_t c)
+    { u8g2.setDrawColor(c); }
+void display_set_font_mode(uint8_t m)
+    { u8g2.setFontMode(m); }
 
 void display_draw_line(int x1, int y1, int x2, int y2)
     { u8g2.drawLine(x1, y1, x2, y2); }

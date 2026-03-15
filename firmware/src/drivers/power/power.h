@@ -11,5 +11,6 @@
 
 void power_standby_init(void);       /* llamar al entrar en ROLE_NONE      */
 void power_standby_reset(void);      /* hay actividad → reiniciar timeout  */
+void power_standby_force(void);      /* apagar pantalla inmediatamente     */
 void power_standby_tick(void);       /* llamar cada ciclo de ROLE_NONE     */
 bool power_standby_active(void);     /* true = pantalla apagada            */
