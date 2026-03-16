@@ -281,6 +281,26 @@ void compass_draw_arrow_thick(int cx, int cy, float angle_deg, int length)
     display_draw_disc(cx, cy, 2);
 }
 
+void compass_draw_north_arrow(int cx, int cy, float angle_deg, int length)
+{
+    float rad  = angle_deg * (float)M_PI / 180.0f;
+    int x_tip  = cx + (int)roundf(length * cosf(rad));
+    int y_tip  = cy + (int)roundf(length * sinf(rad));
+
+    display_draw_line(cx, cy, x_tip, y_tip);
+
+    int   tip = 4;
+    float aL  = (angle_deg + 150.0f) * (float)M_PI / 180.0f;
+    float aR  = (angle_deg - 150.0f) * (float)M_PI / 180.0f;
+
+    display_draw_line(x_tip, y_tip,
+                      x_tip + (int)roundf(tip * cosf(aL)),
+                      y_tip + (int)roundf(tip * sinf(aL)));
+    display_draw_line(x_tip, y_tip,
+                      x_tip + (int)roundf(tip * cosf(aR)),
+                      y_tip + (int)roundf(tip * sinf(aR)));
+}
+
 void compass_draw_ui(float heading_deg, int cx, int cy, int radius)
 {
     display_draw_circle(cx, cy, radius);

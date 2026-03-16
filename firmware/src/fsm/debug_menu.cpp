@@ -84,13 +84,14 @@ static void _draw_menu(void)
         int y  = 24 + i * 15;
         int fy = y - 12;
         if (idx == _cursor) {
-            display_draw_box(0, fy, 128, 14);
+            display_draw_rbox(0, fy, 128, 14, 3);
             display_set_font_mode(1);
             display_set_draw_color(0);
             display_print_medium(2, y, _items[idx]);
             display_set_draw_color(1);
             display_set_font_mode(0);
         } else {
+            display_draw_rframe(0, fy, 128, 14, 3);
             display_print_medium(2, y, _items[idx]);
         }
     }

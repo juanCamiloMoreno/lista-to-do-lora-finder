@@ -55,6 +55,10 @@ void display_draw_frame(int x, int y, int w, int h)
     { u8g2.drawFrame(x, y, w, h); }
 void display_draw_box(int x, int y, int w, int h)
     { u8g2.drawBox(x, y, w, h); }
+void display_draw_rframe(int x, int y, int w, int h, int r)
+    { u8g2.drawRFrame(x, y, w, h, r); }
+void display_draw_rbox(int x, int y, int w, int h, int r)
+    { u8g2.drawRBox(x, y, w, h, r); }
 void display_set_draw_color(uint8_t c)
     { u8g2.setDrawColor(c); }
 void display_set_font_mode(uint8_t m)

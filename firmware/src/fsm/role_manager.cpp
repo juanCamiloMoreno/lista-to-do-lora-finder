@@ -25,14 +25,14 @@ static void _draw_home_btn(int bx, int by, int bw, int bh,
                            const char *label, int lx, int ly, bool selected)
 {
     if (selected) {
-        display_draw_box(bx, by, bw, bh);  /* fondo blanco */
-        display_set_font_mode(1);          /* transparente → no pisa el fondo */
-        display_set_draw_color(0);         /* tinta negra */
+        display_draw_rbox(bx, by, bw, bh, 3); /* fondo blanco redondeado */
+        display_set_font_mode(1);
+        display_set_draw_color(0);
         display_print_small(lx, ly, label);
-        display_set_draw_color(1);         /* restaurar blanco */
+        display_set_draw_color(1);
         display_set_font_mode(0);
     } else {
-        display_draw_frame(bx, by, bw, bh);
+        display_draw_rframe(bx, by, bw, bh, 3);
         display_print_small(lx, ly, label);
     }
 }
@@ -72,6 +72,7 @@ static void _draw_home(void)
     display_print_small(119, 44, "N");
     display_print_small(112, 26, "D");
     compass_draw_arrow(96, 31, cmp.heading, 28);
+    compass_draw_north_arrow(96, 31, 270.0f - cmp.heading, 18);
 
     display_update();
 }

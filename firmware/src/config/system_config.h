@@ -5,7 +5,7 @@
 #define LORA_FREQUENCY      915E6   /* Hz — Región Americas (cambiar a 868E6 para Europa) */
 #define LORA_BANDWIDTH      125E3
 #define LORA_SF             7       /* Spreading Factor 7-12 */
-#define LORA_TX_POWER       14      /* dBm */
+#define LORA_TX_POWER       22      /* dBm — máximo SX1262 */
 
 /* ── GPS ──────────────────────────────────────────────────────────────── */
 #define GPS_BAUD            9600

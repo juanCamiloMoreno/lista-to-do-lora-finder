@@ -24,10 +24,33 @@ static uint8_t         _current_sf   = LORA_SF;
 
 static void IRAM_ATTR _on_rx(void) { _pkt_flag = true; }
 
+/* ── GC1109 FEM (PA externo 28 dBm) ────────────────────────────────────────
+ * GPIO 7  = VFEM — alimentación del FEM (HIGH = encendido)
+ * GPIO 2  = CSD  — chip select/enable  (HIGH = activo)
+ * GPIO 46 = CPS  — modo TX (HIGH antes de TX, LOW después; es strapping pin)
+ * ─────────────────────────────────────────────────────────────────────────── */
+#define FEM_VFEM  7
+#define FEM_CSD   2
+#define FEM_CPS   46
+
+static void _fem_init(void)
+{
+    pinMode(FEM_VFEM, OUTPUT); digitalWrite(FEM_VFEM, HIGH);
+    pinMode(FEM_CSD,  OUTPUT); digitalWrite(FEM_CSD,  HIGH);
+    /* CPS: dejar LOW en reposo (es strapping pin — HIGH en boot puede alterar ROM mode) */
+    pinMode(FEM_CPS,  OUTPUT); digitalWrite(FEM_CPS,  LOW);
+}
+
+static void _fem_tx_enable(void)  { digitalWrite(FEM_CPS, HIGH); }
+static void _fem_tx_disable(void) { digitalWrite(FEM_CPS, LOW);  }
+
 /* ── Implementación ─────────────────────────────────────────────────────── */
 
 bool lora_init(void)
 {
+    /* Encender FEM GC1109 (PA externo 28 dBm) antes de iniciar el radio */
+    _fem_init();
+
     /* Iniciar SPI con pines del Heltec V4 */
     _spi.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
 
@@ -71,7 +94,9 @@ bool lora_send(const uint8_t *data, size_t len)
     if (!_ready || !data || len == 0) return false;
 
     _in_rx = false;
+    _fem_tx_enable();
     int state = _radio.transmit(data, len);
+    _fem_tx_disable();
 
     if (state != RADIOLIB_ERR_NONE) {
         Serial.printf("[lora] TX error: %d\n", state);
