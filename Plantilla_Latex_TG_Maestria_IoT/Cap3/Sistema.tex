@@ -1,0 +1,575 @@
+\chapter{Sistema}\label{solucion}
+
+En este capítulo se presenta la solución propuesta para el sistema de búsqueda y rescate (SAR) basado en comunicación LoRa punto a punto (P2P), diseñado para operar en entornos donde la conectividad celular no se encuentra disponible. El sistema está compuesto por dos nodos portátiles, cada uno integrado por una tarjeta de desarrollo Heltec WiFi LoRa 32 V3 (ESP32-S3 con transceiver SX1262), un módulo GPS externo, un magnetómetro digital tipo brújula y una pantalla OLED integrada. La arquitectura se concibe de forma modular, permitiendo que cada subsistema comunicación, localización, orientación e interfaz de usuario,pueda ser analizado, seleccionado y validado de manera independiente antes de su integración final.
+
+Para fundamentar la selección de cada componente, se realizó un análisis comparativo estructurado en dos niveles: primero, una evaluación de las tecnologías de comunicación inalámbrica candidatas para el escenario SAR; y segundo, una comparación detallada de los módulos y dispositivos de hardware disponibles en el mercado para cada subsistema. Las secciones siguientes presentan estas comparativas junto con la justificación técnica que sustenta cada decisión de diseño.
+
+\section{Comparación de las tecnologías}
+
+\subsection{Redes de comunicación}
+
+El primer paso en el diseño del sistema consiste en seleccionar la tecnología de comunicación inalámbrica más adecuada para el escenario de búsqueda y rescate. Los criterios fundamentales incluyen: capacidad de comunicación punto a punto sin infraestructura, alcance suficiente en terrenos montañosos y rurales, bajo consumo energético para maximizar la autonomía del dispositivo portátil, y la posibilidad de transmitir coordenadas GPS en el payload. Se evaluaron siete tecnologías candidatas: LoRa (SX1262), Sigfox, NB-IoT, BLE~5.0, Zigbee, Wi-Fi y LTE-M.
+
+La Tabla~\ref{tabla:rf_parametros} resume los parámetros de radiofrecuencia de cada tecnología. LoRa destaca por operar en la banda Sub-GHz ISM (915~MHz para la región de las Américas), lo cual le confiere ventajas significativas en propagación frente a tecnologías que operan en 2,4~GHz como BLE, Zigbee y Wi-Fi. Con una potencia de transmisión máxima de +22~dBm y una sensibilidad de recepción de $-148$~dBm, LoRa alcanza un \textit{link budget} de 170~dB, el más alto entre todas las tecnologías evaluadas. Su modulación CSS (\textit{Chirp Spread Spectrum}) proporciona robustez frente a interferencias y desvanecimiento multitrayecto, característica esencial en entornos de montaña y vegetación densa. Si bien tecnologías celulares como NB-IoT y LTE-M presentan link budgets competitivos (164~dB y 129~dB respectivamente), ambas requieren espectro licenciado e infraestructura de torres celulares, lo cual las descarta para el escenario SAR autónomo.
+
+% --- TABLA 1: Parámetros de Radiofrecuencia ---
+\begin{table}[H]
+\begin{center}
+\caption{Comparación de parámetros de radiofrecuencia entre tecnologías inalámbricas candidatas para SAR.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+\textbf{Parámetro} & \textbf{LoRa (SX1262)} & \textbf{Sigfox} & \textbf{NB-IoT} & \textbf{BLE 5.0} & \textbf{Zigbee} & \textbf{Wi-Fi} & \textbf{LTE-M} \\
+\hline
+\hline
+Banda de frecuencia & 868/915~MHz & 868/915~MHz & 700--900~MHz & 2.4~GHz & 2.4~GHz & 2.4/5~GHz & 700--900~MHz \\
+ & (Sub-GHz ISM) & (UNB ISM) & (Licenciada) & (ISM) & (ISM) & (ISM) & (Licenciada) \\
+\hline
+Tipo de espectro & No licenciado & No licenciado & Licenciado & No licenciado & No licenciado & No licenciado & Licenciado \\
+\hline
+Potencia Tx máx. & +22~dBm & +14~dBm & +23~dBm & +20~dBm & +20~dBm & +20~dBm & +23~dBm \\
+ & (158~mW) & (25~mW) & (200~mW) & (100~mW) & (100~mW) & (100~mW) & (200~mW) \\
+\hline
+Sensibilidad Rx & $-148$~dBm & $-126$~dBm & $-141$~dBm & $-97$~dBm & $-100$~dBm & $-82$~dBm & $-106$~dBm \\
+\hline
+Link Budget & 170~dB & 160~dB & 164~dB & 117~dB & 120~dB & 102~dB & 129~dB \\
+\hline
+Modulación & CSS & D-BPSK (UNB) & OFDMA & GFSK & O-QPSK & OFDM & SC-FDMA \\
+\hline
+Tasa de datos & 0.3--50~kbps & 100--600~bps & 26--159~kbps & 125~kbps-- & 20--250~kbps & 1--150~Mbps & 375~kbps-- \\
+ & & & & 2~Mbps & & & 1~Mbps \\
+\hline
+\end{tabular}}
+\label{tabla:rf_parametros}
+\end{center}
+\end{table}
+
+En cuanto al alcance y la cobertura, la Tabla~\ref{tabla:alcance_cobertura} evidencia que LoRa ofrece un rango de 10 a 15~km en línea de vista (LOS) en entornos rurales, y entre 2 y 5~km en condiciones urbanas con obstrucciones (NLOS). Lo más relevante para el presente proyecto es el alcance en escenarios de montaña con el dispositivo portado por el usuario (\textit{body-worn}), donde LoRa es la única tecnología que reporta un rango funcional de 0,3 a 5~km en modo P2P directo. Sigfox, NB-IoT y LTE-M resultan inaplicables en este escenario al depender de infraestructura de red, mientras que BLE, Zigbee y Wi-Fi presentan alcances inferiores a 75~m en las mismas condiciones. Adicionalmente, la operación en banda Sub-GHz confiere a LoRa una excelente capacidad de penetración en edificios, equiparable a NB-IoT pero sin requerir infraestructura celular.
+
+% --- TABLA 2: Alcance y Cobertura ---
+\begin{table}[H]
+\begin{center}
+\caption{Comparación de alcance y cobertura en distintos entornos para tecnologías candidatas en SAR.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+\textbf{Parámetro} & \textbf{LoRa (SX1262)} & \textbf{Sigfox} & \textbf{NB-IoT} & \textbf{BLE 5.0} & \textbf{Zigbee} & \textbf{Wi-Fi} & \textbf{LTE-M} \\
+\hline
+\hline
+Alcance rural (LOS) & 10--15+ km & 30--50 km & 10--15 km & 100--400 m & 100--300 m & 50--100 m & 10--15 km \\
+\hline
+Alcance urbano (NLOS) & 2--5 km & 3--10 km & 1--5 km & 30--75 m & 30--75 m & 30--50 m & 1--5 km \\
+\hline
+Alcance montaña/SAR & 0.3--5 km & N/A & N/A & $<$~50 m & $<$~75 m & $<$~30 m & N/A \\
+(body-worn, NLOS) & (P2P directo) & (sin P2P) & (sin cobertura) & & & & (sin cobertura) \\
+\hline
+Penetración & Excelente & Buena & Excelente & Moderada & Moderada & Baja & Excelente \\
+en edificios & (Sub-GHz) & (Sub-GHz) & (Sub-GHz) & & & & \\
+\hline
+\end{tabular}}
+\label{tabla:alcance_cobertura}
+\end{center}
+\end{table}
+
+El consumo energético del transceiver constituye un factor determinante para la autonomía del dispositivo SAR portátil. La Tabla~\ref{tabla:consumo_energia} presenta las corrientes de operación en los tres modos principales: transmisión, recepción y reposo. El transceiver SX1262 de LoRa consume 118~mA en transmisión a máxima potencia (+22~dBm) y tan solo 4,2~mA en modo recepción, valores que representan un equilibrio favorable entre potencia irradiada y eficiencia energética. En modo \textit{sleep} con arranque en caliente (\textit{warm start}), el consumo desciende a 1,6~$\mu$A, lo cual permite implementar ciclos de trabajo agresivos para extender la vida útil de la batería. Por contraste, las tecnologías celulares (NB-IoT y LTE-M) demandan corrientes de transmisión entre 220 y 490~mA, mientras que Wi-Fi alcanza 280~mA, haciendo inviable su uso prolongado en un dispositivo alimentado por batería de capacidad limitada.
+
+% --- TABLA 3: Consumo de Energía del Transceiver ---
+\begin{table}[H]
+\begin{center}
+\caption{Consumo de corriente del transceiver en distintos modos de operación.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+\textbf{Parámetro} & \textbf{LoRa (SX1262)} & \textbf{Sigfox} & \textbf{NB-IoT} & \textbf{BLE 5.0} & \textbf{Zigbee} & \textbf{Wi-Fi} & \textbf{LTE-M} \\
+\hline
+\hline
+Corriente Tx (máx.) & 118~mA & $\sim$49~mA & 220--490~mA & $\sim$17~mA & $\sim$25~mA & $\sim$280~mA & 230--400~mA \\
+ & (+22~dBm) & (+14~dBm) & (según operador) & (+0~dBm) & (+5~dBm) & (+20~dBm) & \\
+\hline
+Corriente Rx & 4.2~mA & $\sim$10~mA & 40--80~mA & $\sim$6~mA & $\sim$20~mA & $\sim$70~mA & 40--80~mA \\
+\hline
+Corriente Sleep & $\sim$1.6~$\mu$A & $\sim$0.5~$\mu$A & $\sim$3~$\mu$A & $\sim$1~$\mu$A & $\sim$1~$\mu$A & $\sim$15~$\mu$A & $\sim$3~$\mu$A \\
+ & (warm start) & & (PSM) & & & & (PSM) \\
+\hline
+\end{tabular}}
+\label{tabla:consumo_energia}
+\end{center}
+\end{table}
+
+Para evaluar el impacto energético en un escenario operativo realista, la Tabla~\ref{tabla:consumo_mensaje} presenta la estimación de consumo por mensaje considerando un payload de 20~bytes, tamaño suficiente para encapsular las coordenadas GPS (latitud y longitud en formato entero) junto con metadatos del sistema. LoRa requiere entre 5,9 y 23,6~mA$\cdot$s por mensaje dependiendo del \textit{Spreading Factor} (SF7 a SF12), lo que permite transmitir entre 42 y 170 mensajes por hora con una batería de 1000~mAh dedicando el 50\% del tiempo a transmisión. Este rango ofrece flexibilidad para ajustar dinámicamente la configuración según la distancia al otro nodo: SF7 para distancias cortas con mayor tasa de actualización, y SF12 para máximo alcance cuando la señal es débil. Con un payload máximo de 243~bytes y bidireccionalidad completa en modo \textit{half-duplex}, LoRa satisface plenamente los requerimientos de intercambio de datos del sistema SAR, incluyendo el envío de coordenadas, indicadores de estado y comandos de activación remota.
+
+% --- TABLA 4: Consumo por Mensaje ---
+\begin{table}[H]
+\begin{center}
+\caption{Estimación de consumo por mensaje (payload de 20 bytes) y capacidad de transmisión por hora.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+\textbf{Parámetro} & \textbf{LoRa (SX1262)} & \textbf{Sigfox} & \textbf{NB-IoT} & \textbf{BLE 5.0} & \textbf{Zigbee} & \textbf{Wi-Fi} & \textbf{LTE-M} \\
+\hline
+\hline
+Tiempo Tx/mensaje & 50--200~ms & $\sim$2000~ms & 100--500~ms & 2--5~ms & 5--15~ms & 1--3~ms & 50--200~ms \\
+ & (SF7--SF12) & (3 repet.) & & & & & \\
+\hline
+Energía por mensaje & 5.9--23.6 & $\sim$98 & 22--245 & $\sim$0.05 & $\sim$0.25 & $\sim$0.56 & 30--80 \\
+(mA$\cdot$s) & & & & & & & \\
+\hline
+Mensajes/hora & 42--170 & $\sim$10 & 4--45 & $\sim$20\,000 & $\sim$4\,000 & $\sim$1\,800 & 12--33 \\
+(bat. 1000~mAh, 50\% Tx) & & & & & & & \\
+\hline
+Payload máximo & 243~bytes & 12~bytes & 1600~bytes & 251~bytes & 127~bytes & Sin límite & 1600~bytes \\
+\hline
+Bidireccionalidad & Completa & Muy limitada & Completa & Completa & Completa & Completa & Completa \\
+ & (half-duplex) & (4 DL/día) & (half-duplex) & (full-duplex) & (half-duplex) & (full-duplex) & (full-duplex) \\
+\hline
+\end{tabular}}
+\label{tabla:consumo_mensaje}
+\end{center}
+\end{table}
+
+La Tabla~\ref{tabla:aptitud_sar} evalúa directamente la aptitud de cada tecnología para operaciones de búsqueda y rescate sin infraestructura celular. LoRa es la única tecnología que cumple simultáneamente todos los requisitos críticos: comunicación P2P nativa sin necesidad de gateway o estación base, operación completamente autónoma, capacidad de transmitir coordenadas GPS en el payload (latitud y longitud codificadas en aproximadamente 12~bytes), autonomía estimada de 2 a 10 años en modo de bajo consumo, y soporte para topologías estrella, P2P y mesh. Además, LoRa permite implementar mecanismos de geolocalización complementarios mediante RSSI y TDoA, que pueden servir como respaldo cuando el GPS no esté disponible. BLE~5.0 y Zigbee, aunque capaces de operar sin infraestructura, están severamente limitados por su corto alcance, lo que los hace inadecuados como tecnología principal de comunicación en entornos SAR, aunque podrían considerarse como mecanismos auxiliares de proximidad.
+
+% --- TABLA 5: Aptitud para Búsqueda y Rescate ---
+\begin{table}[H]
+\begin{center}
+\caption{Evaluación de aptitud de cada tecnología para operaciones de búsqueda y rescate (SAR) sin infraestructura celular.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+\textbf{Parámetro} & \textbf{LoRa (SX1262)} & \textbf{Sigfox} & \textbf{NB-IoT} & \textbf{BLE 5.0} & \textbf{Zigbee} & \textbf{Wi-Fi} & \textbf{LTE-M} \\
+\hline
+\hline
+Comunicación P2P & Sí (nativo, & No (requiere & No (requiere & Sí (corto & Sí, mesh & Sí (Wi-Fi & No (requiere \\
+ & sin gateway) & red Sigfox) & torre celular) & alcance) & (corto alcance) & Direct) & torre celular) \\
+\hline
+Opera sin & Sí & No & No & Sí (corto & Sí (corto & Sí (corto & No \\
+infraestructura & (autónomo) & & & alcance) & alcance) & alcance) & \\
+\hline
+Envío GPS & Sí (lat/lon & Posible & Sí & Sí & Sí & Sí & Sí \\
+en payload & en $\sim$12~bytes) & (12~B exactos) & & & & & \\
+\hline
+Autonomía estimada & 2--10+ años & 3--10 años & 5--10 años & 1--3 años & 6 meses-- & Horas-- & 5--10 años \\
+(batería) & & & & & 2 años & días & \\
+\hline
+Topología SAR & Estrella/P2P & Estrella & Estrella & Estrella/ & Mesh & Estrella & Estrella \\
+ & /Mesh & (propietaria) & (celular) & Mesh & (corto alcance) & & (celular) \\
+\hline
+Geolocalización & RSSI/TDoA & Solo con red & CID/OTDOA & AoA, RSSI & No nativo & RTT & CID \\
+ & + GPS ext. & & & & & & \\
+\hline
+\end{tabular}}
+\label{tabla:aptitud_sar}
+\end{center}
+\end{table}
+
+Desde la perspectiva económica y de implementación, la Tabla~\ref{tabla:costos_implementacion} confirma que LoRa presenta la menor barrera de entrada para un sistema SAR portátil. El costo del módulo transceiver SX1262 oscila entre 3 y 10~USD, no requiere licencia de espectro ni suscripción mensual a un operador, y su complejidad de despliegue es baja al no depender de infraestructura externa. Esto contrasta marcadamente con NB-IoT y LTE-M, que además de módulos más costosos (8--20~USD), exigen contratos con operadores celulares y generan costos operativos recurrentes. Las tecnologías de corto alcance (BLE, Zigbee, Wi-Fi) presentan costos de módulo comparables, pero su alcance limitado obligaría a desplegar múltiples repetidores o nodos intermedios, incrementando la complejidad y el costo total del sistema.
+
+% --- TABLA 6: Aspectos Económicos y de Implementación ---
+\begin{table}[H]
+\begin{center}
+\caption{Comparación de costos y complejidad de implementación para un sistema SAR portátil.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+\textbf{Parámetro} & \textbf{LoRa (SX1262)} & \textbf{Sigfox} & \textbf{NB-IoT} & \textbf{BLE 5.0} & \textbf{Zigbee} & \textbf{Wi-Fi} & \textbf{LTE-M} \\
+\hline
+\hline
+Costo módulo (USD) & 3--10 & 2--5 & 8--15 & 2--5 & 3--8 & 2--5 & 10--20 \\
+\hline
+Licencia espectro & No requerida & No requerida & Sí (operador) & No requerida & No requerida & No requerida & Sí (operador) \\
+\hline
+Suscripción mensual & No & Sí & Sí (datos) & No & No & No & Sí (datos) \\
+\hline
+Complejidad de & Baja & Media & Alta & Baja & Media & Baja & Alta \\
+despliegue & (sin infra.) & (red operador) & (red celular) & (corto alcance) & (config. mesh) & (AP necesario) & (red celular) \\
+\hline
+Chip referencia & Semtech & Sigfox SoC & Quectel & Nordic & TI CC2652R & Espressif & Quectel \\
+(para SAR) & SX1262 & (BKFOX) & BC660K & nRF5340 & & ESP32 & BG95-M1 \\
+\hline
+\end{tabular}}
+\label{tabla:costos_implementacion}
+\end{center}
+\end{table}
+
+La Tabla~\ref{tabla:resumen_sar} consolida el análisis mediante una evaluación cualitativa ponderada en siete criterios clave para SAR P2P sin infraestructura celular. LoRa obtiene la puntuación máxima de 21/21, siendo calificada como óptima (+++) en alcance P2P, bajo consumo en recepción, operación sin infraestructura, envío de coordenadas GPS, costo total y autonomía de batería, y como buena (++) en bajo consumo de transmisión. La segunda tecnología mejor puntuada es BLE~5.0 con 16/21, cuya principal limitación es el alcance de apenas decenas de metros. Zigbee alcanza 13/21, penalizada igualmente por el corto alcance. Sigfox (10/21), Wi-Fi (9/21), NB-IoT (6/21) y LTE-M (6/21) presentan limitaciones fundamentales que los hacen inadecuados para el escenario propuesto. En consecuencia, \textbf{LoRa con el transceiver SX1262 de Semtech se selecciona como la tecnología de comunicación del sistema SAR}, al ser la única que satisface integralmente todos los requerimientos de alcance, autonomía, costo y operación autónoma.
+
+% --- TABLA 7: Resumen Comparativo con Puntuación para SAR ---
+\begin{table}[H]
+\begin{center}
+\caption{Resumen cualitativo de idoneidad para SAR P2P sin infraestructura celular. Escala: \textbf{+++} = Óptimo, \textbf{++} = Bueno, \textbf{+} = Aceptable, \textbf{--} = No apto.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+\textbf{Criterio SAR} & \textbf{LoRa} & \textbf{Sigfox} & \textbf{NB-IoT} & \textbf{BLE 5.0} & \textbf{Zigbee} & \textbf{Wi-Fi} & \textbf{LTE-M} \\
+\hline
+\hline
+Alcance P2P (km) & +++ & -- & -- & + & + & + & -- \\
+\hline
+Bajo consumo Tx & ++ & ++ & -- & +++ & +++ & -- & -- \\
+\hline
+Bajo consumo Rx & +++ & ++ & -- & ++ & + & -- & -- \\
+\hline
+Sin infraestructura & +++ & -- & -- & ++ & ++ & + & -- \\
+\hline
+Envío coord. GPS & +++ & + & +++ & +++ & ++ & +++ & +++ \\
+\hline
+Costo total & +++ & ++ & + & +++ & ++ & +++ & + \\
+\hline
+Autonomía batería & +++ & ++ & + & ++ & + & -- & + \\
+\hline
+\textbf{Puntuación global} & \textbf{21/21} & \textbf{10/21} & \textbf{6/21} & \textbf{16/21} & \textbf{13/21} & \textbf{9/21} & \textbf{6/21} \\
+\hline
+\end{tabular}}
+\label{tabla:resumen_sar}
+\end{center}
+\end{table}
+
+
+\subsection{Dispositivos o tarjetas de desarrollo}
+
+Una vez seleccionada LoRa como tecnología de comunicación, se procede a la selección de los componentes de hardware que integrarán cada nodo del sistema SAR. El análisis se organiza en cuatro categorías: módulos LoRa (transceiver), módulos GPS, microcontroladores y módulos brújula/magnetómetro. Posteriormente, se evalúan las placas de desarrollo integradas compatibles con el firmware Meshtastic, lo que permite aprovechar un ecosistema de software maduro y validado por la comunidad para comunicaciones LoRa mesh y P2P.
+
+\subsubsection{Módulos LoRa}
+
+La Tabla~\ref{tab:modulos_lora} presenta cinco módulos transceiver LoRa disponibles en el mercado. Todos operan en las bandas 433/868/915~MHz y ofrecen alcances teóricos de 10 a 15~km en línea de vista, con excepción del E32-TTL-100 que reporta 3 a 8~km debido a su interfaz UART con menor control sobre los parámetros de modulación. Los módulos SX1276 y SX1278, ambos de primera generación de Semtech, ofrecen una sensibilidad de $-148$~dBm y amplia documentación. El RFM95W encapsula el SX1276 en un módulo listo para soldar con circuitería de adaptación de impedancia integrada. El RA-02 de Ai-Thinker ofrece un formato compacto basado en el SX1278. Sin embargo, para el presente proyecto se adopta la plataforma Heltec WiFi LoRa 32 V3, que integra el transceiver \textbf{SX1262} de segunda generación. Este chip ofrece mejoras sustanciales respecto a la familia SX127x: menor corriente de transmisión (118~mA vs.\ $\sim$130~mA del SX1276), potencia de salida superior (+22~dBm vs.\ +20~dBm), menor corriente en modo sleep (1,6~$\mu$A vs.\ $\sim$2,5~$\mu$A) y mejor rendimiento de bloqueo, lo que se traduce en mayor alcance efectivo y menor consumo global.
+
+% ============================================================
+% Tabla 1: Módulos LoRa
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Comparativa de módulos LoRa.}
+\scalebox{0.75}[0.75]{
+\begin{tabular}{| l | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Modelo} & \textbf{Frecuencia} & \textbf{Alcance} & \textbf{Potencia TX} & \textbf{Sensibilidad RX} & \textbf{Interfaz} & \textbf{Precio} & \textbf{Características} \\
+\hline
+\hline
+ SX1276 & 433/868/915\,MHz & 10--15\,km & +20\,dBm & $-148$\,dBm & SPI & \$3--5 & Común, buena documentación \\
+ SX1278 & 433/868/915\,MHz & 10--15\,km & +20\,dBm & $-148$\,dBm & SPI & \$3--5 & Similar al 1276, bajo consumo \\
+ RFM95W & 868/915\,MHz & 10--15\,km & +20\,dBm & $-148$\,dBm & SPI & \$5--8 & Módulo completo con SX1276 \\
+ E32-TTL-100 & 433/868/915\,MHz & 3--8\,km & +20\,dBm & $-146$\,dBm & UART & \$4--7 & Fácil uso, configuración AT \\
+ RA-02 & 433/868/915\,MHz & 10--15\,km & +20\,dBm & $-148$\,dBm & SPI & \$3--5 & Compacto, basado en SX1278 \\
+\hline
+\end{tabular}}
+\label{tab:modulos_lora}
+\end{center}
+\end{table}
+
+\subsubsection{Módulos GPS}
+
+La localización geográfica precisa es un requerimiento funcional crítico del sistema SAR, ya que las coordenadas GPS constituyen la información principal que se transmite entre los nodos para guiar la operación de búsqueda. La Tabla~\ref{tab:modulos_gps} compara cinco receptores GNSS de uso común en proyectos IoT embebidos. Todos se comunican mediante interfaz UART y ofrecen precisión de posición en el rango de 2,5 a 3~m CEP (error circular probable). El \textbf{NEO-M8N} de u-blox se posiciona como la opción más adecuada para el sistema, al ofrecer la mejor sensibilidad ($-167$~dBm), la mayor cantidad de canales simultáneos (72) y la tasa de actualización más alta (hasta 18~Hz). Su sensibilidad superior resulta especialmente relevante en entornos de montaña con cobertura parcial del cielo, donde módulos menos sensibles como el NEO-6M ($-161$~dBm) pueden experimentar dificultades para obtener fijación satelital. El ATGM336H, basado en el chipset SONY CXD5603GF, presenta una alternativa interesante por su bajo consumo y soporte multi-GNSS (GPS, GLONASS, BeiDou), aunque su disponibilidad en el mercado local es más limitada.
+
+% ============================================================
+% Tabla 2: Módulos GPS
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Comparativa de módulos GPS.}
+\scalebox{0.68}[0.68]{
+\begin{tabular}{| l | c | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Modelo} & \textbf{Chipset} & \textbf{Canales} & \textbf{Precisión} & \textbf{Actualización} & \textbf{Sensibilidad} & \textbf{Interfaz} & \textbf{Precio} & \textbf{Características} \\
+\hline
+\hline
+ NEO-6M & u-blox 6 & 50 & 2,5\,m CEP & 1--10\,Hz & $-161$\,dBm & UART & \$5--10 & Muy popular, económico \\
+ NEO-7M & u-blox 7 & 56 & 2,5\,m CEP & 1--10\,Hz & $-162$\,dBm & UART & \$8--12 & Mejor TTFF que NEO-6M \\
+ NEO-M8N & u-blox 8 & 72 & 2,5\,m CEP & 1--18\,Hz & $-167$\,dBm & UART & \$10--15 & Excelente sensibilidad \\
+ GT-U7 & MediaTek & 66 & 3\,m CEP & 1--10\,Hz & $-165$\,dBm & UART & \$4--8 & Económico, buen rendimiento \\
+ ATGM336H & SONY CXD5603GF & 99 & 2,5\,m CEP & 1--10\,Hz & $-165$\,dBm & UART & \$6--10 & Bajo consumo, GNSS \\
+\hline
+\end{tabular}}
+\label{tab:modulos_gps}
+\end{center}
+\end{table}
+
+\subsubsection{Microcontroladores}
+
+El microcontrolador es el núcleo de procesamiento de cada nodo, responsable de coordinar la lectura de sensores, la gestión de la comunicación LoRa, la interfaz con el usuario y la lógica de la máquina de estados del sistema. La Tabla~\ref{tab:microcontroladores} presenta cinco microcontroladores candidatos. El \textbf{ESP32} (familia Xtensa de 32 bits) destaca por su frecuencia de reloj de 240~MHz, 520~KB de RAM y 4~MB de Flash, además de integrar conectividad Wi-Fi y Bluetooth de forma nativa. Su ecosistema de desarrollo es el más extenso entre los candidatos, con soporte completo para Arduino, PlatformIO y ESP-IDF, así como una comunidad activa que garantiza disponibilidad de librerías y documentación. Si bien su consumo activo (80--240~mA) es el más alto de los evaluados, este aspecto se mitiga mediante el uso de los modos \textit{deep sleep} y \textit{light sleep} del ESP32-S3, que reducen el consumo a niveles de microamperios. El STM32L072 ofrece consumo ultra bajo (1,3~mA) pero carece de conectividad inalámbrica integrada y presenta un ecosistema más limitado para prototipado rápido. El ATmega328P, aunque ampliamente conocido por el ecosistema Arduino, queda descartado por su limitada capacidad de procesamiento (16~MHz, 2~KB RAM) y la ausencia de periféricos avanzados necesarios para gestionar simultáneamente LoRa, GPS, brújula y pantalla OLED.
+
+% ============================================================
+% Tabla 3: Microcontroladores
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Comparativa de microcontroladores.}
+\scalebox{0.62}[0.62]{
+\begin{tabular}{| l | c | c | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Modelo} & \textbf{Arquitectura} & \textbf{Frecuencia} & \textbf{RAM} & \textbf{Flash} & \textbf{GPIO} & \textbf{ADC} & \textbf{Consumo} & \textbf{Precio} & \textbf{Características} \\
+\hline
+\hline
+ ESP32 & Xtensa 32-bit & 240\,MHz & 520\,KB & 4\,MB & 34 & $18\times12$-bit & 80--240\,mA & \$3--6 & WiFi+BT, muy versátil \\
+ STM32L072 & ARM Cortex-M0+ & 32\,MHz & 20\,KB & 192\,KB & 37 & $16\times12$-bit & 1,3\,mA & \$3--5 & Ultra bajo consumo \\
+ ATmega328P & AVR 8-bit & 16\,MHz & 2\,KB & 32\,KB & 23 & $6\times10$-bit & 4--15\,mA & \$2--4 & Arduino compatible \\
+ SAMD21 & ARM Cortex-M0+ & 48\,MHz & 32\,KB & 256\,KB & 38 & $14\times12$-bit & 3--9\,mA & \$3--5 & Equilibrio potencia/consumo \\
+ nRF52832 & ARM Cortex-M4F & 64\,MHz & 64\,KB & 512\,KB & 32 & $8\times12$-bit & 5--15\,mA & \$4--7 & Bluetooth LE integrado \\
+\hline
+\end{tabular}}
+\label{tab:microcontroladores}
+\end{center}
+\end{table}
+
+\subsubsection{Módulos brújula/magnetómetro}
+
+El magnetómetro digital tipo brújula cumple la función de proporcionar la orientación magnética del dispositivo, dato que, combinado con el rumbo (\textit{bearing}) calculado a partir de las coordenadas GPS de ambos nodos, permite al rescatista determinar la dirección hacia la persona buscada. La Tabla~\ref{tab:modulos_brujula} compara cinco sensores magnetométricos de tres ejes con interfaz I2C. El \textbf{QMC5883L} ofrece la mejor relación costo-beneficio para el proyecto: su resolución de 0,48~mG es superior a la del clásico HMC5883L (0,73~mG), su consumo de 60~$\mu$A es un 40\% menor, y su precio (1--3~USD) es el más bajo del grupo. Además, el QMC5883L es compatible a nivel de registro con el HMC5883L, lo que facilita la migración de código existente. El módulo GY-271, que monta el QMC5883L en una PCB con circuitería de soporte (regulador, condensadores de desacoplamiento y resistencias de pull-up para I2C), constituye la forma más práctica de integrar el magnetómetro al prototipo. El MAG3110, aunque ofrece el menor consumo (9~$\mu$A), presenta limitaciones de disponibilidad en el mercado local y documentación menos extensa. El LSM303DLHC incorpora un acelerómetro de 3 ejes adicional que permitiría implementar compensación de inclinación (\textit{tilt compensation}), pero a costa de un mayor consumo (220~$\mu$A) y precio.
+
+% ============================================================
+% Tabla 4: Módulos Brújula/Magnetómetro
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Comparativa de módulos brújula/magnetómetro.}
+\scalebox{0.72}[0.72]{
+\begin{tabular}{| l | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Modelo} & \textbf{Ejes} & \textbf{Resolución} & \textbf{Rango} & \textbf{Interfaz} & \textbf{Consumo} & \textbf{Precio} & \textbf{Características} \\
+\hline
+\hline
+ HMC5883L & 3 & 0,73\,mG & $\pm$8\,Gauss & I2C & 100\,$\mu$A & \$2--4 & Clásico, buena precisión \\
+ QMC5883L & 3 & 0,48\,mG & $\pm$8\,Gauss & I2C & 60\,$\mu$A & \$1--3 & Compatible HMC5883L, más barato \\
+ GY-271 & 3 & 0,48\,mG & $\pm$8\,Gauss & I2C & 60\,$\mu$A & \$2--4 & Módulo con QMC5883L \\
+ MAG3110 & 3 & 0,10\,$\mu$T & $\pm$1000\,$\mu$T & I2C & 9\,$\mu$A & \$3--5 & Muy bajo consumo \\
+ LSM303DLHC & 3+3 & 1,5\,mG & $\pm$8,1\,Gauss & I2C & 220\,$\mu$A & \$4--7 & Brújula + acelerómetro \\
+\hline
+\end{tabular}}
+\label{tab:modulos_brujula}
+\end{center}
+\end{table}
+
+\subsubsection{Placas de desarrollo integradas}
+
+Dado que el sistema SAR requiere la integración de múltiples subsistemas (LoRa, GPS, brújula, pantalla OLED) en un factor de forma portátil, resulta ventajoso emplear placas de desarrollo que integren al menos el microcontrolador y el transceiver LoRa en una sola PCB. Las Tablas~\ref{tab:placas_esp32}, \ref{tab:placas_nrf52} y \ref{tab:placas_rp2040} presentan las opciones disponibles agrupadas por familia de microcontrolador, todas compatibles con el ecosistema Meshtastic.
+
+Entre las placas basadas en ESP32 (Tabla~\ref{tab:placas_esp32}), la \textbf{Heltec WiFi LoRa 32 V3} se selecciona como la plataforma de desarrollo del sistema por las siguientes razones: integra el microcontrolador ESP32-S3 con el transceiver SX1262 y una pantalla OLED de 0,96 pulgadas en una sola tarjeta; incluye conector JST para batería Li-Po con circuito de carga integrado; soporta Wi-Fi y Bluetooth para depuración y configuración; y su precio (20--30~USD) es competitivo frente a alternativas con prestaciones similares. La TTGO T-Beam V1.1+ constituye la principal alternativa al incluir GPS integrado (NEO-6M o M8N), pero carece de pantalla OLED y su factor de forma con portapilas 18650 es menos compacto. La Station G1 ofrece una pantalla táctil LCD superior, pero su costo elevado (40--55~USD) y dimensiones mayores la hacen menos apropiada para un dispositivo portátil de búsqueda.
+
+% ============================================================
+% Tabla 5: Placas ESP32 - Meshtastic
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Placas de desarrollo basadas en ESP32 (Meshtastic compatible).}
+\scalebox{0.62}[0.62]{
+\begin{tabular}{| l | c | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Placa} & \textbf{MCU} & \textbf{LoRa} & \textbf{GPS} & \textbf{Pantalla} & \textbf{Batería} & \textbf{BT/WiFi} & \textbf{Precio} & \textbf{Ideal para} \\
+\hline
+\hline
+ TTGO T-Beam V1.1+ & ESP32 & SX1262/SX1276 & NEO-6M/M8N & No & 18650 & Sí/Sí & \$25--35 & Nodos móviles, tracking GPS \\
+ TTGO Lora V2.1+ & ESP32 & SX1276/SX1278 & No & OLED & Li-Po JST & Sí/Sí & \$15--25 & Nodos fijos, bajo costo \\
+ Heltec V3 & ESP32-S3 & SX1262 & No & OLED & Li-Po JST & Sí/Sí & \$20--30 & Nodos con display \\
+ Heltec Stick Lite V3 & ESP32-S3 & SX1262 & No & No & Li-Po JST & Sí/Sí & \$15--22 & Nodos compactos \\
+ Station G1 & ESP32-S3 & SX1262 & Opcional & Touch LCD & 18650 & Sí/Sí & \$40--55 & Estación base avanzada \\
+ Nano G1 & ESP32-S3 & SX1262 & No & No & Li-Po JST & Sí/Sí & \$18--28 & Nodo ultra compacto \\
+\hline
+\end{tabular}}
+\label{tab:placas_esp32}
+\end{center}
+\end{table}
+
+Las placas basadas en nRF52840 (Tabla~\ref{tab:placas_nrf52}) representan una alternativa orientada al ultra bajo consumo. El RAK4631 WisBlock ofrece un sistema modular con SX1262 integrado y la posibilidad de agregar módulos opcionales de GPS y pantalla, mientras que el TTGO T-Echo incorpora una pantalla de tinta electrónica (\textit{e-paper}) ideal para escenarios donde la duración de batería es prioritaria. Sin embargo, estas placas carecen de Wi-Fi integrado, lo cual limita las opciones de depuración remota y configuración. Además, el ecosistema de desarrollo del nRF52840 (basado en Zephyr RTOS o Arduino con el BSP de Adafruit) es menos maduro que el del ESP32 para aplicaciones con múltiples periféricos simultáneos.
+
+% ============================================================
+% Tabla 6: Placas nRF52 - Meshtastic
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Placas de desarrollo basadas en nRF52 -- Ultra bajo consumo (Meshtastic compatible).}
+\scalebox{0.62}[0.62]{
+\begin{tabular}{| l | c | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Placa} & \textbf{MCU} & \textbf{LoRa} & \textbf{GPS} & \textbf{Pantalla} & \textbf{Batería} & \textbf{BT/WiFi} & \textbf{Precio} & \textbf{Ideal para} \\
+\hline
+\hline
+ RAK4631 WisBlock & nRF52840 & SX1262 & Módulo opcional & Módulo opcional & Li-Po JST & BLE/No & \$20--30 & Sistema modular, sensores \\
+ TTGO T-Echo & nRF52840 & SX1262 & No & E-Paper & Li-Po & BLE/No & \$35--50 & Batería extendida, e-ink \\
+\hline
+\end{tabular}}
+\label{tab:placas_nrf52}
+\end{center}
+\end{table}
+
+Las placas basadas en RP2040 (Tabla~\ref{tab:placas_rp2040}) ofrecen el punto de entrada más económico (10--25~USD), pero carecen tanto de Wi-Fi como de Bluetooth de forma nativa, requiriendo módulos externos para cualquier conectividad inalámbrica adicional. Su uso se orienta principalmente a proyectos educativos y de prototipado rápido donde el costo es la prioridad absoluta y no se requieren funcionalidades avanzadas de conectividad.
+
+% ============================================================
+% Tabla 7: Placas RP2040 - Meshtastic
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Placas de desarrollo basadas en RP2040 (Meshtastic compatible).}
+\scalebox{0.65}[0.65]{
+\begin{tabular}{| l | c | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Placa} & \textbf{MCU} & \textbf{LoRa} & \textbf{GPS} & \textbf{Pantalla} & \textbf{Batería} & \textbf{BT/WiFi} & \textbf{Precio} & \textbf{Ideal para} \\
+\hline
+\hline
+ Pi Pico + Waveshare & RP2040 & SX1262 & No & No & Ext. manual & No/No & \$10--18 & Proyectos DIY, aprendizaje \\
+ RAK11310 WisBlock & RP2040 & SX1262 & Módulo opcional & Módulo opcional & Li-Po JST & No/No & \$15--25 & Sistema modular RP2040 \\
+\hline
+\end{tabular}}
+\label{tab:placas_rp2040}
+\end{center}
+\end{table}
+
+La Tabla~\ref{tab:wisblock_cores} detalla los módulos \textit{core} del ecosistema modular RAK WisBlock, que permite combinar diferentes MCUs con módulos de sensores estandarizados. Aunque este enfoque modular es atractivo para diseños flexibles, la integración todo-en-uno de la Heltec V3 resulta más conveniente para el prototipo del sistema SAR, al reducir la cantidad de conectores, el tamaño de la PCB y los puntos de falla mecánica.
+
+% ============================================================
+% Tabla 8: RAK WisBlock Core Modules
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Sistemas modulares RAK WisBlock -- Core modules.}
+\scalebox{0.72}[0.72]{
+\begin{tabular}{| l | c | c | c | c | c | c | l |}
+\hline
+ \textbf{Core Module} & \textbf{MCU} & \textbf{LoRa incluido} & \textbf{GPS} & \textbf{Bluetooth} & \textbf{WiFi} & \textbf{Precio} & \textbf{Ventajas} \\
+\hline
+\hline
+ RAK11200 & ESP32 & No (requiere módulo) & Módulo opcional & Sí & Sí & \$12--18 & WiFi + BLE, ecosistema ESP32 \\
+ RAK4631 & nRF52840 & Sí (SX1262 integrado) & Módulo opcional & BLE & No & \$20--30 & Ultra bajo consumo \\
+ RAK11310 & RP2040 & No (requiere módulo) & Módulo opcional & No & No & \$15--25 & Dual-core, económico \\
+\hline
+\end{tabular}}
+\label{tab:wisblock_cores}
+\end{center}
+\end{table}
+
+La Tabla~\ref{tab:comparativa_arquitecturas} sintetiza la comparación entre las tres arquitecturas de microcontroladores evaluadas. El ESP32, a pesar de su mayor consumo energético en modo activo, ofrece la mejor combinación de potencia de procesamiento, conectividad integrada (Wi-Fi + Bluetooth), soporte comunitario y facilidad de desarrollo para un sistema que debe gestionar simultáneamente comunicación LoRa, GPS, brújula, pantalla OLED y lógica de control. El nRF52840 sería preferible en escenarios donde la duración de batería sea el criterio dominante (1--2 semanas frente a 1--3 días del ESP32), mientras que el RP2040 se posiciona para aplicaciones educativas de bajo presupuesto.
+
+% ============================================================
+% Tabla 9: Comparativa por Arquitectura
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Comparativa de arquitecturas de microcontroladores.}
+\scalebox{0.78}[0.78]{
+\begin{tabular}{| l | c | c | c |}
+\hline
+ \textbf{Característica} & \textbf{ESP32} & \textbf{nRF52840} & \textbf{RP2040} \\
+\hline
+\hline
+ Consumo energía & Alto (80--240\,mA) & Ultra bajo (5--15\,mA) & Medio (30--50\,mA) \\
+ Bluetooth & BT Classic + BLE & Solo BLE & Requiere módulo externo \\
+ WiFi & Integrado & No disponible & No disponible \\
+ Facilidad actualización & Media & Excelente (OTA BLE) & Media \\
+ Duración batería & 1--3 días & 1--2 semanas & 3--7 días \\
+ Comunidad/Soporte & Excelente & Muy bueno & Bueno \\
+ Precio promedio & \$15--35 & \$20--50 & \$10--25 \\
+ Mejor para & Nodos con WiFi/GPS & Sensores remotos & Proyectos educativos \\
+\hline
+\end{tabular}}
+\label{tab:comparativa_arquitecturas}
+\end{center}
+\end{table}
+
+\subsubsection{Calificación y selección de componentes}
+
+Para formalizar la selección de cada componente, se diseñó un sistema de calificación por categorías con escala de 1 a 5 estrellas, evaluando los criterios más relevantes para el escenario SAR. Las Tablas~\ref{tab:calificacion_lora} a~\ref{tab:calificacion_brujula} presentan los resultados de esta evaluación.
+
+En la categoría de módulos LoRa (Tabla~\ref{tab:calificacion_lora}), los transceivers SX1276 y SX1278 obtienen la calificación más alta (4,5/5), seguidos del RFM95W (4,3/5). No obstante, como se mencionó anteriormente, el sistema emplea el SX1262 integrado en la placa Heltec V3, que supera a estos módulos en eficiencia energética y potencia de transmisión. La tabla sirve como referencia comparativa del estado del arte en módulos LoRa discretos.
+
+% ============================================================
+% Tabla 10: Calificación Módulos LoRa
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Calificación por categorías -- Módulos LoRa.}
+\scalebox{0.78}[0.78]{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+ \textbf{Modelo} & \textbf{Alcance} & \textbf{Consumo} & \textbf{Precio} & \textbf{Documentación} & \textbf{Facilidad} & \textbf{Disponibilidad} & \textbf{Total} \\
+\hline
+\hline
+ SX1276 & 5/5 & 4/5 & 5/5 & 5/5 & 3/5 & 5/5 & \textbf{4,5/5} \\
+ SX1278 & 5/5 & 5/5 & 5/5 & 4/5 & 3/5 & 5/5 & \textbf{4,5/5} \\
+ RFM95W & 5/5 & 4/5 & 4/5 & 4/5 & 4/5 & 5/5 & \textbf{4,3/5} \\
+ E32-TTL-100 & 4/5 & 3/5 & 4/5 & 3/5 & 5/5 & 4/5 & \textbf{3,8/5} \\
+ RA-02 & 5/5 & 4/5 & 5/5 & 3/5 & 3/5 & 4/5 & \textbf{4,0/5} \\
+\hline
+\end{tabular}}
+\label{tab:calificacion_lora}
+\end{center}
+\end{table}
+
+Para los módulos GPS (Tabla~\ref{tab:calificacion_gps}), el \textbf{NEO-M8N} obtiene la calificación más alta (4,3/5), destacando con puntuación máxima en precisión, velocidad de fijación y sensibilidad. Su principal desventaja es el precio ligeramente superior (10--15~USD), que se compensa con un rendimiento significativamente mejor en condiciones de señal débil, aspecto crítico para el escenario SAR en entornos de montaña y bosque.
+
+% ============================================================
+% Tabla 11: Calificación Módulos GPS
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Calificación por categorías -- Módulos GPS.}
+\scalebox{0.75}[0.75]{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+ \textbf{Modelo} & \textbf{Precisión} & \textbf{Vel. fijación} & \textbf{Consumo} & \textbf{Precio} & \textbf{Disponibilidad} & \textbf{Sensibilidad} & \textbf{Total} \\
+\hline
+\hline
+ NEO-6M & 4/5 & 3/5 & 3/5 & 5/5 & 5/5 & 3/5 & \textbf{3,8/5} \\
+ NEO-7M & 4/5 & 4/5 & 3/5 & 4/5 & 4/5 & 4/5 & \textbf{3,8/5} \\
+ NEO-M8N & 5/5 & 5/5 & 4/5 & 3/5 & 4/5 & 5/5 & \textbf{4,3/5} \\
+ GT-U7 & 3/5 & 3/5 & 3/5 & 5/5 & 4/5 & 4/5 & \textbf{3,5/5} \\
+ ATGM336H & 4/5 & 4/5 & 5/5 & 4/5 & 3/5 & 4/5 & \textbf{4,0/5} \\
+\hline
+\end{tabular}}
+\label{tab:calificacion_gps}
+\end{center}
+\end{table}
+
+En la evaluación de microcontroladores (Tabla~\ref{tab:calificacion_mcu}), el \textbf{ESP32} lidera con 4,5/5, obteniendo la máxima puntuación en potencia de procesamiento, precio, ecosistema de desarrollo, periféricos disponibles y facilidad de uso. Su único punto débil es el consumo energético (2/5), que como se ha indicado, se gestiona mediante estrategias de ahorro de energía a nivel de firmware.
+
+% ============================================================
+% Tabla 12: Calificación Microcontroladores
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Calificación por categorías -- Microcontroladores.}
+\scalebox{0.72}[0.72]{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+ \textbf{Modelo} & \textbf{Potencia} & \textbf{Consumo} & \textbf{Precio} & \textbf{Ecosistema} & \textbf{GPIO/Periféricos} & \textbf{Facilidad} & \textbf{Total} \\
+\hline
+\hline
+ ESP32 & 5/5 & 2/5 & 5/5 & 5/5 & 5/5 & 5/5 & \textbf{4,5/5} \\
+ STM32L072 & 3/5 & 5/5 & 4/5 & 4/5 & 4/5 & 3/5 & \textbf{3,8/5} \\
+ ATmega328P & 2/5 & 3/5 & 5/5 & 5/5 & 3/5 & 5/5 & \textbf{3,8/5} \\
+ SAMD21 & 4/5 & 4/5 & 4/5 & 4/5 & 4/5 & 4/5 & \textbf{4,0/5} \\
+ nRF52832 & 4/5 & 4/5 & 3/5 & 4/5 & 4/5 & 3/5 & \textbf{3,7/5} \\
+\hline
+\end{tabular}}
+\label{tab:calificacion_mcu}
+\end{center}
+\end{table}
+
+Finalmente, en la categoría de módulos brújula (Tabla~\ref{tab:calificacion_brujula}), el \textbf{QMC5883L} y su versión montada en PCB \textbf{GY-271} comparten la calificación más alta (4,2/5). El QMC5883L se selecciona por su excelente relación costo-disponibilidad (5/5 en ambos criterios), bajo consumo (4/5) y resolución adecuada para la aplicación de brújula digital. El módulo GY-271 será la presentación física empleada en el prototipo, al incluir los componentes pasivos de soporte necesarios para la conexión directa al bus I2C del ESP32-S3.
+
+% ============================================================
+% Tabla 13: Calificación Módulos Brújula
+% ============================================================
+\begin{table}[H]
+\begin{center}
+\caption{Calificación por categorías -- Módulos brújula.}
+\scalebox{0.72}[0.72]{
+\begin{tabular}{| l | c | c | c | c | c | c | c |}
+\hline
+ \textbf{Modelo} & \textbf{Precisión} & \textbf{Consumo} & \textbf{Precio} & \textbf{Disponibilidad} & \textbf{Funciones extra} & \textbf{Estabilidad} & \textbf{Total} \\
+\hline
+\hline
+ HMC5883L & 5/5 & 3/5 & 4/5 & 3/5 & 3/5 & 5/5 & \textbf{3,8/5} \\
+ QMC5883L & 4/5 & 4/5 & 5/5 & 5/5 & 3/5 & 4/5 & \textbf{4,2/5} \\
+ GY-271 & 4/5 & 4/5 & 4/5 & 5/5 & 4/5 & 4/5 & \textbf{4,2/5} \\
+ MAG3110 & 4/5 & 5/5 & 3/5 & 3/5 & 3/5 & 4/5 & \textbf{3,5/5} \\
+ LSM303DLHC & 4/5 & 3/5 & 3/5 & 4/5 & 5/5 & 4/5 & \textbf{3,8/5} \\
+\hline
+\end{tabular}}
+\label{tab:calificacion_brujula}
+\end{center}
+\end{table}
+
+\subsection{Dispositivos de localización GPS}
+
+En resumen, el subsistema de localización GPS del sistema SAR se implementa mediante el módulo \textbf{NEO-M8N} de u-blox, conectado al ESP32-S3 a través de interfaz UART. Este módulo fue seleccionado por su sensibilidad superior ($-167$~dBm), que permite obtener fijación satelital incluso en condiciones de cielo parcialmente obstruido ---situación habitual en entornos de montaña y vegetación densa donde el sistema está diseñado para operar---. La tasa de actualización configurable de hasta 18~Hz proporciona margen para ajustar la frecuencia de lectura GPS según el modo de operación del sistema: alta frecuencia durante la fase activa de búsqueda y baja frecuencia durante el modo de espera para conservar energía. Las coordenadas obtenidas se codifican en formato entero (latitud y longitud multiplicadas por $10^7$) ocupando aproximadamente 8~bytes, lo que, junto con los metadatos del sistema (identificador de nodo, nivel de batería, RSSI y tipo de mensaje), permite construir un payload compacto dentro de los 20~bytes estimados para la transmisión LoRa.
+
+\subsection{Medios de interacción con el usuario (UI)}
+
+La interfaz de usuario del sistema SAR se implementa a través de la pantalla OLED de 0,96 pulgadas (128$\times$64 píxeles) integrada en la placa Heltec WiFi LoRa 32 V3, controlada mediante el driver SSD1306 a través del bus I2C. A pesar de su tamaño reducido, esta pantalla permite presentar la información esencial para la operación de búsqueda: dirección hacia el objetivo (flecha indicadora basada en el rumbo calculado), distancia estimada, nivel de señal LoRa (RSSI), estado del GPS (fijación activa o ausente), nivel de batería y modo de operación del sistema. El diseño de la interfaz se organiza en pantallas o vistas correspondientes a los estados de la máquina de estados del sistema (reposo, búsqueda activa, alerta de proximidad, pérdida de señal), permitiendo que el rescatista acceda a la información relevante de forma inmediata y sin necesidad de navegación compleja. Complementariamente, se prevé la incorporación de retroalimentación háptica (motor de vibración) y sonora (buzzer) para alertas críticas, como la detección de proximidad o la pérdida de enlace LoRa, garantizando que el usuario reciba la información incluso cuando no pueda consultar la pantalla directamente.

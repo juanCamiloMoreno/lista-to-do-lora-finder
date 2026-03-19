@@ -1,0 +1,401 @@
+\chapter{Requerimientos del Sistema}\label{ch:requerimientos}
+
+Este capítulo define los requerimientos del sistema de búsqueda y rescate (SAR) basado en comunicación LoRa punto a punto. Los requerimientos se derivan de los casos de uso identificados, las restricciones del hardware seleccionado (Heltec WiFi LoRa 32 V3, NEO-M8N, QMC5883L) y las condiciones operativas del escenario objetivo: entornos sin cobertura celular donde un rescatista (Nodo~A) debe localizar a una persona extraviada (Nodo~B). La especificación se organiza en siete categorías: requerimientos funcionales, no funcionales, de interfaz de usuario, de hardware, de comunicación, de autonomía y resiliencia, y de privacidad y consentimiento.
+
+%% ================================================================
+\section{Requerimientos funcionales}\label{sec:req_funcionales}
+%% ================================================================
+
+Los requerimientos funcionales definen las capacidades que el sistema debe proporcionar al usuario para cumplir su misión de localización. La Tabla~\ref{tab:req_funcionales} presenta estos requerimientos, organizados por subsistema.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos funcionales del sistema SAR.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | l | p{9.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Subsistema} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RF-01 & Comunicación & El sistema debe establecer un enlace LoRa P2P bidireccional entre el Nodo~A y el Nodo~B sin requerir gateway, repetidor ni infraestructura celular. & Alta \\
+\hline
+RF-02 & Comunicación & El sistema debe transmitir paquetes con un payload que contenga: coordenadas GPS (latitud y longitud), identificador de nodo, nivel de batería, RSSI del último paquete recibido y tipo de mensaje. & Alta \\
+\hline
+RF-03 & Comunicación & El sistema debe permitir la configuración dinámica del \textit{Spreading Factor} (SF7--SF12) para adaptar el balance entre alcance y tasa de actualización según las condiciones del enlace. & Media \\
+\hline
+RF-04 & Comunicación & El sistema debe implementar un mecanismo de acuse de recibo (ACK) para confirmar la recepción de paquetes críticos (activación remota, solicitud de posición). & Alta \\
+\hline
+RF-05 & Localización & Cada nodo debe obtener su posición geográfica mediante el módulo GPS (NEO-M8N) con una precisión $\leq$ 2,5~m CEP y una tasa de actualización configurable entre 1 y 10~Hz. & Alta \\
+\hline
+RF-06 & Localización & El sistema debe calcular la distancia y el rumbo (\textit{bearing}) entre ambos nodos a partir de sus coordenadas GPS utilizando la fórmula de Haversine. & Alta \\
+\hline
+RF-07 & Orientación & El Nodo~A debe leer el magnetómetro QMC5883L para determinar el rumbo magnético del dispositivo y presentar al rescatista una flecha indicadora de dirección hacia el Nodo~B en la pantalla OLED. & Alta \\
+\hline
+RF-08 & Interfaz & La pantalla OLED debe mostrar: dirección hacia el objetivo, distancia estimada, nivel de señal LoRa (RSSI), estado del GPS, nivel de batería y modo de operación actual. & Alta \\
+\hline
+RF-09 & Interfaz & El sistema debe emitir alertas hápticas (vibración) y sonoras (buzzer) ante eventos críticos: proximidad al objetivo ($<$~100~m), pérdida de enlace LoRa y pérdida de fijación GPS. & Media \\
+\hline
+RF-10 & Activación & El Nodo~A debe poder activar remotamente al Nodo~B mediante un comando LoRa autenticado, permitiendo que el Nodo~B pase de modo reposo a modo de transmisión activa. & Alta \\
+\hline
+RF-11 & Activación & El Nodo~B debe responder al comando de activación con un paquete de confirmación que incluya su posición GPS actual (si está disponible) y estado del sistema. & Alta \\
+\hline
+RF-12 & Energía & El sistema debe implementar un modo de bajo consumo (\textit{deep sleep}) en el que el Nodo~B despierte periódicamente para escuchar comandos de activación, con un ciclo de trabajo configurable. & Alta \\
+\hline
+
+\end{tabular}}
+\label{tab:req_funcionales}
+\end{center}
+\end{table}
+
+
+%% ================================================================
+\section{Requerimientos no funcionales}\label{sec:req_no_funcionales}
+%% ================================================================
+
+La Tabla~\ref{tab:req_no_funcionales} define los requerimientos no funcionales que establecen las restricciones de calidad, rendimiento y operación del sistema.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos no funcionales del sistema SAR.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | l | p{9.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Categoría} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RNF-01 & Rendimiento & El enlace LoRa debe alcanzar un rango mínimo de 2~km en condiciones NLOS urbanas y de 500~m en entorno de montaña con dispositivo portado por el usuario (\textit{body-worn}). & Alta \\
+\hline
+RNF-02 & Rendimiento & La latencia de ida y vuelta (RTT) del intercambio de posiciones entre nodos no debe superar los 3~segundos en configuración SF7 y los 10~segundos en SF12. & Alta \\
+\hline
+RNF-03 & Rendimiento & La precisión de la dirección indicada en la pantalla OLED debe tener un error $\leq 15^{\circ}$ respecto al rumbo real, considerando las limitaciones de calibración del magnetómetro en campo. & Media \\
+\hline
+RNF-04 & Autonomía & El Nodo~A (rescatista, búsqueda activa) debe operar un mínimo de 6~horas continuas con una batería Li-Po de 1000~mAh, transmitiendo un paquete cada 5~segundos en SF7. & Alta \\
+\hline
+RNF-05 & Autonomía & El Nodo~B (persona extraviada, modo reposo) debe mantener la capacidad de escucha y activación remota durante un mínimo de 72~horas con batería Li-Po de 1000~mAh. & Alta \\
+\hline
+RNF-06 & Fiabilidad & La tasa de entrega de paquetes (\textit{Packet Delivery Ratio}, PDR) debe ser $\geq$ 90\% a una distancia de 1~km en condiciones NLOS. & Alta \\
+\hline
+RNF-07 & Fiabilidad & El sistema debe tolerar hasta 60~segundos de pérdida de enlace LoRa sin descartar la sesión de búsqueda, mostrando al usuario la última posición conocida y el tiempo transcurrido desde la última actualización. & Alta \\
+\hline
+RNF-08 & Portabilidad & Cada nodo, incluyendo batería, antena y periféricos (GPS, brújula), debe tener un peso total $\leq$ 200~g y dimensiones que permitan su transporte en un bolsillo o sujeto a un arnés. & Media \\
+\hline
+RNF-09 & Usabilidad & La interfaz OLED debe ser comprensible sin entrenamiento previo; la información de dirección y distancia debe ser interpretable en menos de 3~segundos por un usuario no técnico. & Media \\
+\hline
+RNF-10 & Mantenibilidad & El firmware debe estar estructurado en módulos independientes (comunicación, GPS, brújula, UI, energía) compilable mediante PlatformIO con documentación de API interna. & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_no_funcionales}
+\end{center}
+\end{table}
+
+
+%% ================================================================
+\section{Requerimientos de interfaz de usuario}\label{sec:req_ui}
+%% ================================================================
+
+El diseño de la interfaz de usuario del sistema SAR está condicionado por dos factores fundamentales: el espacio reducido de la pantalla OLED de 0,96~pulgadas (128$\times$64 píxeles) integrada en la Heltec WiFi LoRa 32 V3, y el contexto de uso de emergencia donde el rescatista opera bajo estrés, posiblemente en movimiento y con visibilidad limitada. Estas restricciones exigen la aplicación de principios de diseño minimalista que maximicen la legibilidad y minimicen la carga cognitiva del operador.
+
+Los principios de usabilidad de Nielsen \cite{nielsen1994heuristic} ---particularmente la visibilidad del estado del sistema, la correspondencia entre el sistema y el mundo real, y el diseño estético y minimalista--- resultan directamente aplicables al diseño de interfaces en dispositivos embebidos con pantallas de resolución limitada. En este contexto, la priorización de información, el uso de iconografía clara y la retroalimentación multimodal (visual, háptica y sonora) constituyen estrategias clave para garantizar que el usuario reciba la información crítica de manera inmediata.
+
+La investigación en interfaces de dispositivos \textit{wearable} demuestra que en pantallas pequeñas cada elemento visual debe cumplir una función específica, evitando información redundante o de relevancia secundaria \cite{gonzalez2017nielsen}. En el contexto SAR, donde el rescatista necesita tomar decisiones de navegación en fracciones de segundo, la interfaz debe priorizar tres datos fundamentales: dirección hacia el objetivo, distancia estimada y estado del enlace de comunicación. La retroalimentación háptica mediante vibración complementa la información visual cuando el operador no puede consultar la pantalla, siguiendo el principio de redundancia sensorial ampliamente documentado en sistemas de navegación con retroalimentación táctil \cite{amemiya2008haptic}.
+
+La plataforma Meshtastic, que opera sobre hardware similar (ESP32 + SX1262 + OLED SSD1306), ha demostrado que una interfaz basada en marcos (\textit{frames}) con navegación mediante un único botón físico es viable y efectiva para dispositivos LoRa portátiles \cite{meshtastic2025baseui}. Su diseño BaseUI implementa un carrusel automático entre pantallas de información, barra de menú auto-ocultable y soporte para múltiples dispositivos de entrada (botón, encoder rotatorio, teclado), validando el paradigma de navegación secuencial en pantallas OLED de 128$\times$64 píxeles.
+
+\subsection{Requerimientos de pantalla OLED}
+
+La Tabla~\ref{tab:req_oled} define los requerimientos específicos para la presentación de información en la pantalla OLED del sistema.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos de interfaz -- Pantalla OLED.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | p{9.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RUI-01 & La pantalla debe organizarse en vistas (\textit{frames}) correspondientes a los estados de la máquina de estados del sistema: reposo, búsqueda activa, alerta de proximidad y pérdida de señal. Cada vista debe presentar únicamente la información relevante para el estado actual. & Alta \\
+\hline
+RUI-02 & La vista principal de búsqueda debe mostrar simultáneamente: una flecha indicadora de dirección (calculada a partir del \textit{bearing} relativo entre el rumbo del magnetómetro y el azimut hacia el Nodo~B), la distancia estimada en metros o kilómetros, y un indicador de nivel de señal LoRa (RSSI). & Alta \\
+\hline
+RUI-03 & La flecha indicadora de dirección debe ocupar al menos el 40\% del área útil de la pantalla (mínimo 50$\times$40 píxeles) para garantizar su visibilidad a distancia de brazo extendido y en condiciones de iluminación exterior. & Alta \\
+\hline
+RUI-04 & Los elementos textuales deben utilizar una tipografía de alto contraste con tamaño mínimo de 10~píxeles de altura para valores numéricos principales (distancia, RSSI) y de 8~píxeles para información secundaria (estado GPS, batería, modo). & Media \\
+\hline
+RUI-05 & La pantalla debe incluir una barra de estado persistente (máximo 10~píxeles de altura) que muestre: nivel de batería (icono), estado de fijación GPS (icono), calidad del enlace LoRa (icono o barra) y modo de operación actual. & Media \\
+\hline
+RUI-06 & El sistema debe implementar un carrusel automático entre vistas con un intervalo configurable (por defecto 5~segundos), permitiendo al usuario recorrer las pantallas de información sin necesidad de interacción manual. & Baja \\
+\hline
+RUI-07 & La pantalla debe apagarse automáticamente tras un período configurable de inactividad (por defecto 30~segundos) para conservar energía, reactivándose ante la pulsación de cualquier botón o la recepción de un evento crítico (alerta de proximidad, pérdida de enlace). & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_oled}
+\end{center}
+\end{table}
+
+
+\subsection{Requerimientos de botones físicos}
+
+La interacción con el sistema se realiza mediante botones físicos, dado que la pantalla OLED no es táctil y el escenario de uso requiere operación con guantes o en condiciones de lluvia. La Tabla~\ref{tab:req_botones} define los requerimientos para la entrada del usuario. El diseño de la interacción sigue el principio de que los botones físicos deben asignarse a las acciones más importantes y frecuentes \cite{gammaux2024wearable}, minimizando la complejidad de navegación en un dispositivo que debe operarse con una sola mano.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos de interfaz -- Botones físicos.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | p{9.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RUI-08 & El Nodo~A debe operar con un máximo de tres botones físicos: un botón principal multifunción (integrado en la Heltec V3, GPIO~0), y dos botones auxiliares opcionales para funciones secundarias. & Alta \\
+\hline
+RUI-09 & El botón principal debe soportar tres tipos de interacción: pulsación corta ($<$~500~ms) para avanzar entre vistas de la pantalla, pulsación larga (2--3~s) para acceder al menú de configuración, y doble pulsación para activar/desactivar alertas sonoras. & Alta \\
+\hline
+RUI-10 & El Nodo~B debe disponer de al menos un botón físico que permita: pulsación corta para confirmar activación manual, y pulsación prolongada ($>$~3~s) para desactivar la transmisión de ubicación (conforme al requerimiento de privacidad RP-04). & Alta \\
+\hline
+RUI-11 & Toda pulsación de botón debe generar retroalimentación inmediata al usuario: confirmación visual en pantalla (cambio de vista o indicador) y opcionalmente confirmación háptica (pulso de vibración de 50~ms). & Media \\
+\hline
+RUI-12 & El sistema debe implementar un mecanismo de \textit{debounce} por software con un tiempo mínimo de 200~ms entre pulsaciones consecutivas para prevenir activaciones accidentales, especialmente relevante en condiciones de movimiento y vibración durante la búsqueda. & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_botones}
+\end{center}
+\end{table}
+
+
+\subsection{Requerimientos de retroalimentación háptica y sonora}
+
+La retroalimentación multimodal es fundamental en dispositivos SAR portátiles, ya que el rescatista puede encontrarse en situaciones donde la consulta visual de la pantalla no es posible (caminando por terreno irregular, condiciones de baja visibilidad nocturna, o simplemente con las manos ocupadas). La investigación en sistemas de alerta háptica para entornos de alto riesgo ha demostrado que las señales de vibración de corta duración son percibidas como más urgentes y generan tiempos de reacción menores que las señales prolongadas \cite{hapticvest2025pmc}. La Tabla~\ref{tab:req_haptic} define los patrones de retroalimentación háptica y sonora del sistema.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos de interfaz -- Retroalimentación háptica y sonora.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | p{9.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RUI-13 & El sistema debe incorporar un motor de vibración tipo ERM (\textit{Eccentric Rotating Mass}) controlado mediante un transistor de conmutación (MMBT2222A o equivalente) desde un GPIO del ESP32-S3, con protección de flyback (diodo 1N4148W). & Alta \\
+\hline
+RUI-14 & El sistema debe incorporar un buzzer piezoeléctrico activo controlado por GPIO, capaz de emitir tonos audibles a una distancia mínima de 2~metros en ambiente exterior. & Media \\
+\hline
+RUI-15 & El sistema debe definir al menos cuatro patrones de vibración diferenciables por el usuario: (a)~pulso corto único (50~ms) para confirmación de botón, (b)~doble pulso (100~ms ON, 100~ms OFF, 100~ms ON) para recepción de paquete, (c)~vibración continua rápida (200~ms ON, 100~ms OFF, repetido) para alerta de proximidad ($<$~100~m), y (d)~vibración lenta periódica (500~ms ON, 2~s OFF) para pérdida de enlace. & Alta \\
+\hline
+RUI-16 & El buzzer debe emitir patrones sonoros diferenciados para: (a)~tono corto (100~ms) para confirmación, (b)~tono doble para recepción de datos, (c)~tono ascendente repetido para proximidad, y (d)~tono grave intermitente para pérdida de enlace. & Media \\
+\hline
+RUI-17 & El usuario debe poder silenciar independientemente la vibración y el buzzer mediante la interfaz de botones, sin afectar la operación del sistema ni las alertas visuales en pantalla. Esto permite operar en modo sigiloso cuando las condiciones lo requieran. & Media \\
+\hline
+RUI-18 & La intensidad de las alertas hápticas y sonoras debe incrementarse progresivamente conforme disminuye la distancia al objetivo (por debajo de 100~m), proporcionando al rescatista una guía de proximidad perceptible sin necesidad de consultar la pantalla. & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_haptic}
+\end{center}
+\end{table}
+
+
+%% ================================================================
+\section{Requerimientos de hardware}\label{sec:req_hardware}
+%% ================================================================
+
+Los requerimientos de hardware formalizan las especificaciones técnicas mínimas de cada componente del sistema, derivadas del análisis comparativo presentado en el Capítulo~\ref{solucion}. La selección de hardware se realizó priorizando el equilibrio entre rendimiento, consumo energético, disponibilidad en el mercado y compatibilidad con el ecosistema de desarrollo PlatformIO/Arduino.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos de hardware del sistema SAR.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | l | p{8.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Componente} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RHW-01 & Tarjeta de desarrollo & Cada nodo debe basarse en la placa Heltec WiFi LoRa 32 V3, que integra: MCU ESP32-S3 (Xtensa LX7, 240~MHz, 512~KB SRAM), transceiver LoRa SX1262 (banda 915~MHz), pantalla OLED SSD1306 (128$\times$64, I2C), conector de batería Li-Po con circuito de carga integrado, y antena IPEX/SMA. & Alta \\
+\hline
+RHW-02 & Módulo GPS & Cada nodo debe incorporar un receptor GNSS u-blox NEO-M8N con las siguientes especificaciones mínimas: 72 canales, sensibilidad de adquisición $\leq -148$~dBm, sensibilidad de rastreo $\leq -167$~dBm, precisión $\leq 2{,}5$~m CEP, interfaz UART a 9600~bps (configurable hasta 115200~bps), y antena cerámica activa integrada. & Alta \\
+\hline
+RHW-03 & Magnetómetro & El Nodo~A debe incorporar un magnetómetro digital QMC5883L (módulo GY-271) con las siguientes características: resolución de 2~mG (escala $\pm 8$~Gauss), interfaz I2C a 400~kHz, corriente de operación $\leq 200~\mu$A, y tasa de muestreo configurable de 10 a 200~Hz. La conexión debe realizarse al bus I2C secundario (Wire1) del ESP32-S3 (GPIO~47 SDA, GPIO~48 SCL). & Alta \\
+\hline
+RHW-04 & Motor de vibración & Cada nodo debe incorporar un motor de vibración tipo ERM miniatura ($\leq 10$~mm de diámetro) con voltaje de operación de 3,0--3,3~V y tiempo de arranque $\leq 50$~ms, controlado mediante circuito de conmutación con transistor NPN (MMBT2222A), resistencia de base y diodo de flyback. & Alta \\
+\hline
+RHW-05 & Buzzer & El Nodo~A debe incorporar un buzzer piezoeléctrico activo con voltaje de operación de 3,3~V, frecuencia resonante entre 2 y 4~kHz, y nivel de presión sonora $\geq 75$~dB a 10~cm, controlado por GPIO del ESP32-S3 mediante circuito de conmutación con transistor NPN. & Media \\
+\hline
+RHW-06 & Batería & Cada nodo debe alimentarse con una batería Li-Po de capacidad mínima de 1000~mAh, voltaje nominal de 3,7~V, con conector JST PH~2.0 compatible con el puerto de carga de la Heltec V3. La batería debe ser recargable mediante el puerto USB-C de la placa. & Alta \\
+\hline
+RHW-07 & Antena LoRa & Cada nodo debe utilizar una antena LoRa sintonizada para la banda ISM 915~MHz (región 2, Américas) con ganancia mínima de 2~dBi, conectada al puerto IPEX de la Heltec V3 o mediante conector SMA con cable pigtail. & Alta \\
+\hline
+RHW-08 & Antena GPS & El módulo GPS debe disponer de una antena cerámica activa con ganancia $\geq 25$~dB y plano de tierra adecuado, montada en la parte superior del enclosure con orientación hacia el cielo. & Alta \\
+\hline
+RHW-09 & Protección & Los circuitos de conmutación de vibración y buzzer deben incluir: diodo de flyback (1N4148W o equivalente) en paralelo con la carga inductiva, capacitor de desacople (100~nF) en la alimentación, y resistencia de base calculada para saturación del transistor con margen de seguridad $\geq 2$. & Media \\
+\hline
+RHW-10 & Enclosure & Cada nodo debe integrarse en una carcasa con grado de protección $\geq$ IP54 (protección contra polvo y salpicaduras), con ventana para la pantalla OLED, acceso a los botones físicos, y orificios para la antena LoRa, antena GPS y puerto USB-C de carga. El peso total del ensamble (placa + batería + periféricos + carcasa) no debe exceder 200~g. & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_hardware}
+\end{center}
+\end{table}
+
+
+\section{Requerimientos de comunicación}\label{sec:req_comunicacion}
+
+
+Los requerimientos de comunicación detallan las especificaciones del enlace LoRa P2P entre los dos nodos del sistema. Estos requerimientos se derivan de las características del transceiver SX1262, los modelos de propagación empíricos documentados por Callebaut y Van~der~Perre \cite{callebaut2020p2p} para topología P2P, y las restricciones regulatorias de la banda ISM 915~MHz en la región de las Américas. Bor y Roedig \cite{bor2017parameter} demostraron que la selección de parámetros LoRa (SF, BW, CR, potencia) tiene un impacto significativo en el \textit{Time on Air} y el consumo energético, lo que justifica la definición de configuraciones predeterminadas optimizadas para el escenario SAR.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos de comunicación LoRa P2P.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | l | p{8.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Subcategoría} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RCOM-01 & Enlace & El sistema debe operar en modo LoRa P2P (\textit{raw LoRa}) utilizando el transceiver SX1262, sin dependencia del protocolo LoRaWAN ni de ninguna infraestructura de red. La comunicación debe ser bidireccional en modo \textit{half-duplex}. & Alta \\
+\hline
+RCOM-02 & Frecuencia & La frecuencia de operación debe configurarse en la banda ISM 915~MHz (región 2, Américas), dentro del rango 902--928~MHz, seleccionando un canal fijo o un mecanismo de salto de frecuencia simplificado para mitigar interferencias. & Alta \\
+\hline
+RCOM-03 & Parámetros & El sistema debe soportar configuración dinámica de los parámetros LoRa: Spreading Factor (SF7 a SF12), Bandwidth (125, 250 o 500~kHz), Coding Rate (4/5 a 4/8) y potencia de transmisión (hasta +22~dBm). La configuración por defecto para búsqueda activa debe ser SF7, BW=125~kHz, CR=4/5, +22~dBm. & Alta \\
+\hline
+RCOM-04 & Payload & El paquete de datos debe contener un payload compacto ($\leq 30$~bytes) estructurado en campos de tamaño fijo: identificador de nodo (2~bytes), latitud GPS (4~bytes, entero $\times 10^7$), longitud GPS (4~bytes, entero $\times 10^7$), RSSI del último paquete recibido (1~byte con signo), nivel de batería (1~byte, 0--100\%), estado del sistema (1~byte, \textit{bitfield}), tipo de mensaje (1~byte) y campo de autenticación (4~bytes). & Alta \\
+\hline
+RCOM-05 & Tasa & En modo de búsqueda activa (SF7, BW=125~kHz), el sistema debe transmitir un paquete de posición cada 5~segundos como máximo, garantizando un \textit{Time on Air} $\leq 100$~ms por paquete para cumplir con las restricciones de ciclo de trabajo. & Alta \\
+\hline
+RCOM-06 & Alcance & El enlace debe alcanzar un rango mínimo de 2~km en condiciones NLOS urbanas y 500~m en terreno montañoso con vegetación, con un PDR $\geq 90$\% a 1~km NLOS, conforme a los modelos de propagación P2P documentados por Callebaut y Van~der~Perre \cite{callebaut2020p2p}. & Alta \\
+\hline
+RCOM-07 & Adaptación & El sistema debe implementar un mecanismo de adaptación automática del Spreading Factor basado en el RSSI y la tasa de pérdida de paquetes: cuando el RSSI descienda por debajo de $-120$~dBm o el PDR caiga por debajo de 80\%, el SF debe incrementarse en una unidad (hasta SF12) para mejorar la sensibilidad del enlace. & Media \\
+\hline
+RCOM-08 & ACK & Los paquetes críticos (activación remota, solicitud de posición, cambio de modo) deben implementar un mecanismo de acuse de recibo (ACK) con un máximo de 3 reintentos y un \textit{timeout} configurable (por defecto 2~segundos). Los paquetes periódicos de posición no requieren ACK. & Alta \\
+\hline
+RCOM-09 & Ventana Rx & El Nodo~B en modo reposo debe abrir una ventana de recepción periódica con duración $\geq$ al \textit{Time on Air} de un paquete completo en la configuración SF más alta soportada (SF12), garantizando la capacidad de recibir comandos de activación remota. & Alta \\
+\hline
+RCOM-10 & Sincronización & Ambos nodos deben operar con la misma configuración de frecuencia, SF, BW y CR. El sistema debe incluir un mecanismo de sincronización inicial mediante un intercambio de paquetes de \textit{handshake} al encender los dispositivos. & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_comunicacion}
+\end{center}
+\end{table}
+
+
+%% ================================================================
+\section{Requerimientos de autonomía y resiliencia}\label{sec:autonomia}
+%% ================================================================
+
+El término \textit{autonomía} en el contexto de este sistema tiene una doble acepción: por un lado, la autonomía energética (duración de la batería) y, por otro, la autonomía operativa ---es decir, la capacidad del sistema de seguir proporcionando información útil al rescatista cuando uno o más subsistemas degradan su funcionamiento o dejan de estar disponibles---. La Tabla~\ref{tab:req_autonomia} define los requerimientos específicos para cada escenario de falla identificado.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos de autonomía y resiliencia ante escenarios de falla.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | p{3.2cm} | p{5cm} | p{5.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Escenario de falla} & \textbf{Condición de activación} & \textbf{Comportamiento requerido} & \textbf{Prioridad} \\
+\hline\hline
+
+RA-01 & Pérdida de fijación GPS en el Nodo~A & El módulo GPS no reporta posición válida durante $>$~30~s. & El sistema muestra alerta visual de ``GPS no disponible'', utiliza la última posición conocida del Nodo~A para cálculos de dirección, e indica al usuario que se desplace a una zona con mejor visibilidad del cielo. La brújula sigue operativa. & Alta \\
+\hline
+RA-02 & Pérdida de fijación GPS en el Nodo~B & El Nodo~B transmite un paquete con bandera de GPS inválido. & El Nodo~A muestra la última posición conocida del Nodo~B con marca temporal, y emplea el indicador RSSI como mecanismo de aproximación alternativo (modo ``señal más fuerte''). & Alta \\
+\hline
+RA-03 & Pérdida temporal del enlace LoRa & No se recibe ningún paquete durante un intervalo $>$~60~s. & La pantalla muestra ``Enlace perdido'' con temporizador; se conserva la última posición y dirección del Nodo~B; el sistema incrementa automáticamente el SF para mejorar la sensibilidad del enlace. & Alta \\
+\hline
+RA-04 & Pérdida prolongada del enlace LoRa & No se recibe ningún paquete durante $>$~5~min. & El sistema entra en modo de escaneo extendido: alterna entre SF10 y SF12 con ventanas de recepción más largas. Se emite alerta periódica (vibración cada 30~s) para notificar al rescatista. La última posición conocida permanece en pantalla. & Alta \\
+\hline
+RA-05 & Ausencia total de comunicación & No se logra establecer enlace LoRa en ningún SF tras 10~min de intentos. & El Nodo~A registra en memoria la última posición conocida del Nodo~B y las coordenadas GPS de su propia trayectoria. Se muestra la dirección hacia la última posición conocida. El Nodo~B continúa transmitiendo balizas periódicas de forma autónoma. & Alta \\
+\hline
+RA-06 & Degradación energética & El nivel de batería desciende por debajo del 20\%. & El sistema reduce la frecuencia de transmisión y apaga el buzzer. Por debajo del 10\%, desactiva la pantalla OLED y mantiene únicamente la baliza LoRa mínima (un paquete cada 60~s con posición GPS). & Media \\
+\hline
+RA-07 & Falla simultánea GPS + LoRa degradado & GPS no disponible y enlace LoRa con PDR $<$~50\%. & El sistema opera en modo de mínima información: muestra únicamente RSSI del último paquete recibido y su tendencia (mejorando/empeorando) para guiar al rescatista por aproximación de señal. & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_autonomia}
+\end{center}
+\end{table}
+
+La estrategia de resiliencia se fundamenta en el principio de \textit{degradación gradual}: ante la pérdida de un subsistema, el sistema no se detiene sino que reduce su nivel de servicio de forma controlada, proporcionando siempre al rescatista la mejor información disponible con los recursos funcionales restantes. Los niveles de servicio se definen como:
+
+\begin{enumerate}
+    \item \textbf{Nivel completo}: GPS activo + LoRa activo + brújula activa $\rightarrow$ dirección, distancia y posición en tiempo real.
+    \item \textbf{Nivel degradado}: GPS parcial o LoRa intermitente $\rightarrow$ última posición conocida + RSSI como indicador de proximidad.
+    \item \textbf{Nivel mínimo}: sin GPS + LoRa degradado $\rightarrow$ solo tendencia de RSSI para aproximación por señal.
+    \item \textbf{Nivel autónomo}: sin enlace $\rightarrow$ navegación hacia última posición conocida mediante brújula y coordenadas almacenadas.
+\end{enumerate}
+
+
+%% ================================================================
+\section{Requerimientos de privacidad y consentimiento}\label{sec:privacidad}
+%% ================================================================
+
+Dado que el sistema transmite coordenadas GPS en tiempo real entre los dos nodos, resulta imprescindible definir mecanismos que protejan la privacidad de los usuarios y garanticen el consentimiento informado para el rastreo de ubicación. La Tabla~\ref{tab:req_privacidad} establece los requerimientos correspondientes.
+
+\begin{table}[H]
+\begin{center}
+\caption{Requerimientos de privacidad y consentimiento.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{| l | p{9.5cm} | c |}
+\hline
+\textbf{ID} & \textbf{Descripción} & \textbf{Prioridad} \\
+\hline\hline
+
+RP-01 & La activación del modo de transmisión de ubicación en el Nodo~B debe requerir una acción deliberada del usuario (pulsación de botón físico o respuesta a comando de activación remota), nunca activarse de forma automática sin intervención humana. & Alta \\
+\hline
+RP-02 & Los paquetes LoRa deben incluir un identificador de sesión único y un campo de autenticación básica (clave compartida de 4~bytes) que impida que nodos no autorizados inyecten paquetes falsos o reciban posiciones sin permiso. & Alta \\
+\hline
+RP-03 & El sistema no debe almacenar un historial persistente de posiciones GPS en memoria no volátil. Las coordenadas se mantienen únicamente en RAM durante la sesión activa de búsqueda y se eliminan al apagar el dispositivo. & Alta \\
+\hline
+RP-04 & El Nodo~B debe poder desactivar la transmisión de su ubicación en cualquier momento mediante la pulsación prolongada ($>$~3~s) de un botón físico, incluso si fue activado remotamente por el Nodo~A. & Alta \\
+\hline
+RP-05 & Los paquetes LoRa no deben incluir información de identificación personal (nombre, número de documento). El identificador de nodo se limita a un código numérico de 2~bytes asignado durante el emparejamiento. & Media \\
+\hline
+RP-06 & El emparejamiento entre Nodo~A y Nodo~B debe realizarse previamente a la operación de campo, requiriendo proximidad física (intercambio de clave por botón o NFC) para evitar emparejamientos remotos no autorizados. & Media \\
+\hline
+RP-07 & El firmware debe documentar de forma transparente qué datos se transmiten, con qué frecuencia y durante cuánto tiempo, permitiendo al usuario comprender el alcance del rastreo antes de activar el dispositivo. & Media \\
+\hline
+
+\end{tabular}}
+\label{tab:req_privacidad}
+\end{center}
+\end{table}
+
+El enfoque de privacidad adoptado sigue el principio de \textit{minimización de datos}: se transmite exclusivamente la información necesaria para la operación de búsqueda (posición, RSSI, estado), sin recopilar datos adicionales del usuario. La autenticación mediante clave compartida preinstalada, si bien no constituye un mecanismo criptográfico robusto, proporciona un nivel de protección proporcional al escenario de uso ---comunicación temporal entre dos dispositivos previamente emparejados en un entorno de emergencia--- sin incrementar significativamente el tamaño del payload ni el Tiempo en el Aire.
+
+
+%% ================================================================
+\section{Resumen de la especificación}\label{sec:resumen_req}
+%% ================================================================
+
+La Tabla~\ref{tab:resumen_req} presenta un resumen cuantitativo de la especificación de requerimientos.
+
+\begin{table}[H]
+\begin{center}
+\caption{Resumen cuantitativo de requerimientos.}
+\begin{tabular}{| l | c | c | c | c |}
+\hline
+\textbf{Categoría} & \textbf{Total} & \textbf{Alta} & \textbf{Media} & \textbf{Baja} \\
+\hline\hline
+Funcionales (RF) & 12 & 9 & 3 & 0 \\
+\hline
+No funcionales (RNF) & 10 & 5 & 5 & 0 \\
+\hline
+Interfaz de usuario (RUI) & 18 & 8 & 9 & 1 \\
+\hline
+Hardware (RHW) & 10 & 7 & 3 & 0 \\
+\hline
+Comunicación (RCOM) & 10 & 7 & 3 & 0 \\
+\hline
+Autonomía y resiliencia (RA) & 7 & 5 & 2 & 0 \\
+\hline
+Privacidad y consentimiento (RP) & 7 & 4 & 3 & 0 \\
+\hline
+\textbf{Total} & \textbf{74} & \textbf{45} & \textbf{28} & \textbf{1} \\
+\hline
+\end{tabular}
+\label{tab:resumen_req}
+\end{center}
+\end{table}
+
+El sistema especifica un total de 74 requerimientos, de los cuales 45 (61\%) son de alta prioridad y constituyen el alcance mínimo viable del prototipo. Los 28 requerimientos de prioridad media representan mejoras que pueden implementarse de forma incremental sin comprometer la funcionalidad core del sistema de búsqueda y rescate. Un requerimiento adicional (RUI-06, carrusel automático) se clasifica como prioridad baja por ser una mejora de conveniencia no esencial para la operación.

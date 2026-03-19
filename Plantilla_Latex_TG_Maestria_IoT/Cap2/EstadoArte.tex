@@ -1,0 +1,119 @@
+\chapter{Estado del Arte}\label{estarte}
+\section{Redes LPWAN para Internet de las Cosas}
+\label{sec:lpwan}
+
+El crecimiento del Internet de las Cosas (IoT) ha generado la necesidad de tecnologías de comunicación inalámbrica capaces de transmitir datos a largas distancias con bajo consumo energético. Dentro de estas soluciones destacan las redes LPWAN (\textit{Low Power Wide Area Network}), diseñadas específicamente para conectar dispositivos que transmiten pequeñas cantidades de datos a intervalos periódicos \cite{raza2017lpwan}.
+
+Las redes LPWAN se caracterizan por ofrecer gran cobertura geográfica, bajo consumo energético y costos operativos reducidos, lo cual las hace adecuadas para aplicaciones como monitoreo ambiental, agricultura inteligente, ciudades inteligentes y sistemas de telemetría \cite{qadir2018lpwan}. A diferencia de las tecnologías celulares convencionales o las redes de corto alcance como WiFi o Bluetooth, las LPWAN están optimizadas para escenarios donde los dispositivos transmiten volúmenes reducidos de información y requieren autonomía energética prolongada.
+
+Entre las principales tecnologías LPWAN se encuentran LoRaWAN, Sigfox y NB-IoT. Mekki \textit{et al.} \cite{mekki2019comparative} presentan una comparación directa entre estas tres tecnologías, demostrando que LoRa sobresale en términos de vida útil de batería, capacidad y costo, mientras que NB-IoT ofrece ventajas en latencia y calidad de servicio (QoS). Por su parte, Sinha \textit{et al.} \cite{sinha2017survey} profundizan en la comparación entre LoRa y NB-IoT a nivel de capa física, protocolos y consumo energético. Centenaro \textit{et al.} \cite{centenaro2016longrange} destacan el papel de las comunicaciones de largo alcance en bandas no licenciadas como habilitadoras de escenarios IoT y ciudades inteligentes.
+
+De estas tecnologías, LoRa ha ganado gran popularidad debido a su flexibilidad, facilidad de implementación y capacidad de operar en bandas de frecuencia no licenciadas, lo cual la convierte en una opción adecuada para sistemas de comunicación donde no se dispone de infraestructura celular o donde esta se encuentra saturada.
+
+% ------------------------------------------------------------
+\section{Tecnología LoRa}
+\label{sec:lora}
+
+La tecnología LoRa (\textit{Long Range}) es un sistema de comunicación inalámbrica de largo alcance desarrollado por la empresa Semtech. LoRa se basa en una técnica de modulación denominada \textit{Chirp Spread Spectrum} (CSS), la cual permite transmitir información mediante señales de frecuencia variable llamadas \textit{chirps} \cite{vangelista2017frequency}. En esta modulación, cada símbolo se representa como un barrido lineal de frecuencia (\textit{chirp}) cuya frecuencia inicial codifica la información transmitida.
+
+Vangelista \cite{vangelista2017frequency} presenta la primera descripción matemática rigurosa de la modulación LoRa, derivando el receptor óptimo basado en FFT y demostrando la superioridad de LoRa frente a FSK en canales con desvanecimiento selectivo en frecuencia. Chiani y Elzanaty \cite{chiani2019lora} complementan este análisis demostrando que la modulación LoRa es una modulación de fase continua sin memoria, y derivan expresiones espectrales en forma cerrada utilizando funciones de Fresnel. Más recientemente, Maleki \textit{et al.} \cite{maleki2024tutorial} presentan el tutorial más completo y actualizado sobre CSS, cubriendo fundamentos matemáticos, análisis de rendimiento ante errores, características espectrales y avances en diseño de transceptores.
+
+Una de las principales ventajas de la modulación CSS es su alta resistencia al ruido y a la interferencia, lo que permite alcanzar distancias de transmisión de varios kilómetros incluso con niveles de potencia relativamente bajos \cite{augustin2016study}. La capa física de LoRa permite ajustar varios parámetros de transmisión que influyen directamente en el rendimiento del sistema \cite{haxhibeqiri2018survey, pasolini2022chirp}. Entre los más importantes se encuentran:
+
+\begin{itemize}
+    \item \textbf{Spreading Factor (SF):} determina la duración del símbolo y el nivel de robustez de la comunicación. LoRa soporta valores de SF7 a SF12, donde valores mayores incrementan el alcance y la resistencia al ruido, pero reducen la tasa de transmisión.
+    \item \textbf{Bandwidth (BW):} define el ancho de banda de la señal transmitida. Los valores típicos son 125\,kHz, 250\,kHz y 500\,kHz.
+    \item \textbf{Coding Rate (CR):} permite añadir redundancia mediante codificación de corrección de errores hacia adelante (\textit{Forward Error Correction}, FEC). Los valores van de 4/5 a 4/8.
+    \item \textbf{Potencia de transmisión:} controla el nivel de energía emitido por el transmisor, típicamente configurable hasta +20\,dBm.
+\end{itemize}
+
+Estos parámetros pueden configurarse para optimizar el alcance, la velocidad de transmisión o el consumo energético dependiendo de los requerimientos de la aplicación.
+
+% ------------------------------------------------------------
+\section{Comunicación LoRa punto a punto}
+\label{sec:p2p}
+
+Aunque LoRa es ampliamente conocido por su implementación dentro del protocolo LoRaWAN, también puede utilizarse en configuraciones de comunicación punto a punto (P2P). En este tipo de arquitectura, dos dispositivos LoRa se comunican directamente entre sí sin necesidad de una infraestructura de red compuesta por \textit{gateways} y servidores \cite{berto2021mesh}.
+
+Berto \textit{et al.} \cite{berto2021mesh} proponen e implementan una red mesh LoRa completamente libre de \textit{gateways}, basada en placas ESP32 Heltec con chip SX1276, desarrollando un \textit{stack} de protocolos por capas que habilita comunicación P2P ad-hoc y enrutamiento multi-salto. Solé \textit{et al.} \cite{sole2022loramesher} presentan LoRaMesher, una librería C++ de código abierto que implementa enrutamiento proactivo por vector de distancia sobre hardware ESP32 + SX1276, incluyendo CSMA/CA, gestión de ciclo de trabajo y mantenimiento de tablas de enrutamiento.
+
+La comunicación punto a punto resulta especialmente útil en aplicaciones experimentales, prototipos o sistemas donde se requiere transmitir datos entre dos nodos de manera directa sin depender de infraestructura externa \cite{huh2019mesh}. Lundell \textit{et al.} \cite{lundell2018routing} presentan un protocolo de enrutamiento basado en HWMP y AODV adaptado a las restricciones de baja tasa de datos y ciclo de trabajo de LoRa, validado mediante pruebas de laboratorio y campo.
+
+En una comunicación LoRa P2P, la calidad del enlace depende principalmente de factores como la potencia de transmisión, la sensibilidad del receptor, la interferencia del entorno y las condiciones de propagación de la señal. Estos elementos determinan la distancia máxima de comunicación y la fiabilidad del enlace \cite{augustin2016study}.
+
+% ------------------------------------------------------------
+\section{Tiempo en el Aire (\textit{Time on Air})}
+\label{sec:toa}
+
+El \textit{Time on Air} (ToA) corresponde al tiempo total que un paquete de datos permanece siendo transmitido en el canal inalámbrico. Este parámetro es especialmente importante en sistemas LoRa debido a que influye directamente en el consumo energético del dispositivo, en la capacidad de la red y en el cumplimiento de las regulaciones de ciclo de trabajo (\textit{duty cycle}) \cite{adelantado2017limits}.
+
+Adelantado \textit{et al.} \cite{adelantado2017limits} analizan el ToA como el factor central que limita la escalabilidad de LoRaWAN, presentando cálculos de ToA en función del tamaño de carga útil para diferentes valores de SF a 125\,kHz y CR~4/5, y demostrando cómo las regulaciones de ciclo de trabajo en la banda EU868 (1\,\%) interactúan con el ToA para restringir el número de transmisiones por dispositivo.
+
+El tiempo de un símbolo LoRa está dado por la expresión:
+
+\begin{equation}
+    T_{sym} = \frac{2^{SF}}{BW}
+    \label{eq:tsym}
+\end{equation}
+
+\noindent donde $SF$ es el \textit{Spreading Factor} y $BW$ es el ancho de banda en Hz. A partir de este valor se calcula el tiempo del preámbulo y el tiempo de la carga útil para obtener el ToA total del paquete, según las fórmulas especificadas en la guía de diseño de Semtech \cite{semtech2013designer}.
+
+Bor y Roedig \cite{bor2017parameter} realizan el primer análisis experimental exhaustivo de las 6.720 combinaciones posibles de parámetros LoRa (SF, BW, CR, potencia de transmisión), demostrando que diferentes configuraciones producen diferencias de consumo energético superiores a un factor de 100. Bor \textit{et al.} \cite{bor2016scale} complementan este análisis con un estudio de escalabilidad que muestra cómo el ToA crece exponencialmente con valores mayores de SF, incrementando directamente la probabilidad de colisión en el esquema MAC basado en ALOHA.
+
+Casals \textit{et al.} \cite{casals2017energy} presentan modelos analíticos de consumo de corriente y vida útil del dispositivo final derivados de mediciones de hardware, donde el ToA es la variable central que determina la duración de los estados de transmisión y recepción, cuantificando el ToA para todas las tasas de datos obligatorias (DR0--DR6, correspondientes a SF12--SF7).
+
+Un mayor \textit{Time on Air} implica que el canal permanece ocupado durante más tiempo, lo cual puede incrementar la probabilidad de colisiones en escenarios donde múltiples dispositivos comparten el mismo canal de comunicación. Por esta razón, el cálculo y la optimización del ToA son aspectos fundamentales en el diseño de sistemas LoRa eficientes.
+
+% ------------------------------------------------------------
+\section{Propagación de la señal en redes LoRa}
+\label{sec:propagacion}
+
+La propagación de señales inalámbricas describe la manera en que una onda electromagnética se desplaza desde el transmisor hasta el receptor a través del espacio. En sistemas LoRa, la propagación de la señal puede verse afectada por múltiples factores como la distancia, los obstáculos físicos, la topografía del terreno y las condiciones atmosféricas \cite{petajajarvi2015coverage}.
+
+Petäjäjärvi \textit{et al.} \cite{petajajarvi2015coverage} realizan una de las primeras y más citadas campañas de medición empírica de cobertura LoRa, reportando alcances máximos de 15\,km en tierra y 30\,km sobre agua a 868\,MHz en la ciudad de Oulu, Finlandia, y derivando un modelo de atenuación de canal basado en la distancia logarítmica con exponentes de pérdida de trayecto para diferentes escenarios.
+
+Uno de los modelos más utilizados para estimar la pérdida de señal es el \textit{Free Space Path Loss} (FSPL), el cual describe la atenuación de la señal en condiciones ideales de espacio libre:
+
+\begin{equation}
+    FSPL\,(dB) = 20\log_{10}(d) + 20\log_{10}(f) + 20\log_{10}\left(\frac{4\pi}{c}\right)
+    \label{eq:fspl}
+\end{equation}
+
+\noindent donde $d$ es la distancia en metros, $f$ es la frecuencia en Hz y $c$ es la velocidad de la luz. En entornos reales, sin embargo, es más común utilizar modelos empíricos como el \textit{Log-distance path loss model}:
+
+\begin{equation}
+    PL(d)\,[dB] = PL(d_0) + 10\,n\,\log_{10}\left(\frac{d}{d_0}\right) + X_\sigma
+    \label{eq:logdistance}
+\end{equation}
+
+\noindent donde $PL(d_0)$ es la pérdida de trayecto a una distancia de referencia $d_0$, $n$ es el exponente de pérdida de trayecto que depende del entorno, y $X_\sigma$ es una variable aleatoria gaussiana que modela el desvanecimiento por sombreado (\textit{shadowing}).
+
+El Chall \textit{et al.} \cite{elchall2019propagation} realizan extensas campañas de medición a 868\,MHz en entornos interiores, urbanos exteriores y rurales, desarrollando modelos empíricos de pérdida de trayecto y comparándolos con los modelos estándar Okumura-Hata y COST-231. Callebaut y Van der Perre \cite{callebaut2020p2p} presentan el estudio más directamente relevante para un sistema de localización P2P, ya que evalúan específicamente la pérdida de trayecto en topología punto a punto (sin \textit{gateway}), con mediciones en entornos urbano, bosque y costa con terminales a baja altura, e introducen una metodología para el manejo de datos censurados (paquetes perdidos por debajo de la sensibilidad del receptor).
+
+Ferreira \textit{et al.} \cite{ferreira2020propagation} realizan un estudio comparativo de la propagación LoRa en entornos de bosque, urbano y suburbano, caracterizando RSSI, SNR y tasa de entrega de paquetes (\textit{Packet Delivery Ratio}), incluyendo escenarios de movilidad del nodo. Azevedo y Mendonça \cite{azevedo2024review} presentan una revisión crítica y actualizada de todos los modelos de propagación empleados en sistemas LoRa, incluyendo log-distance, Okumura-Hata, COST-231 y modelos multi-pendiente.
+
+Para evaluar la calidad del enlace LoRa se utilizan indicadores como:
+
+\begin{itemize}
+    \item \textbf{RSSI (\textit{Received Signal Strength Indicator}):} indica la potencia total de la señal recibida, incluyendo la señal útil y el ruido. Se expresa en dBm.
+    \item \textbf{SNR (\textit{Signal to Noise Ratio}):} indica la relación entre la potencia de la señal útil y la potencia del ruido en el canal. Se expresa en dB.
+\end{itemize}
+
+Estos parámetros permiten estimar la intensidad de la señal recibida y la calidad del enlace, siendo fundamentales para sistemas de localización basados en RSSI donde la distancia entre nodos se estima a partir de la atenuación de la señal.
+
+% ------------------------------------------------------------
+\section{Consideraciones de seguridad y privacidad}
+\label{sec:seguridad}
+
+La seguridad es un aspecto crítico en los sistemas de comunicación inalámbrica, especialmente en aplicaciones de IoT donde se transmiten datos sensibles. Las redes LoRaWAN implementan mecanismos de cifrado basados en el estándar AES-128, el cual garantiza la confidencialidad y la integridad de los datos transmitidos \cite{noura2020security}.
+
+Noura \textit{et al.} \cite{noura2020security} presentan el survey más completo de seguridad en LoRaWAN, cubriendo todas las versiones del protocolo (v1.0.x hasta v1.1), los mecanismos de cifrado AES-128, los modos de activación OTAA (\textit{Over-The-Air Activation}) y ABP (\textit{Activation By Personalization}), y catalogando los principales ataques junto con las contramedidas propuestas.
+
+Yang \textit{et al.} \cite{yang2018vulnerabilities} realizan el primer análisis sistemático de vulnerabilidades de LoRaWAN, diseñando cinco ataques concretos: ataque de repetición (\textit{replay attack}) para denegación de servicio selectiva, recuperación de texto plano, modificación de mensajes por inversión de bits (\textit{bit-flipping}), suplantación de ACK y ataque de agotamiento de batería. Butun \textit{et al.} \cite{butun2019security} complementan este análisis con una evaluación de riesgos de seguridad de LoRaWAN v1.1 siguiendo las guías ETSI, identificando amenazas críticas como la captura física de dispositivos finales, ataques de \textit{gateway} falso y vulnerabilidades de auto-repetición.
+
+Eldefrawy \textit{et al.} \cite{eldefrawy2019formal} presentan el primer análisis formal de seguridad de LoRaWAN utilizando la herramienta de verificación de protocolos Scyther, analizando los mecanismos de intercambio de claves en las versiones v1.0 y v1.1, y descubriendo vulnerabilidades significativas en v1.0 relacionadas con propiedades de autenticación y secreto que fueron parcialmente abordadas en v1.1. Ruotsalainen \textit{et al.} \cite{ruotsalainen2022physical} se enfocan en la seguridad de la capa física de LoRa, revisando ataques de \textit{jamming}, escucha pasiva (\textit{eavesdropping}), ataques de repetición a nivel de radio y técnicas de \textit{fingerprinting} de dispositivos basadas en características de la señal RF.
+
+Sin embargo, en configuraciones de comunicación punto a punto como la propuesta en este trabajo, la implementación de mecanismos de seguridad depende directamente del diseño del sistema y de las capacidades del dispositivo utilizado. Entre las principales amenazas que pueden afectar a estos sistemas se encuentran la intercepción de datos (\textit{sniffing}), los ataques de repetición (\textit{replay attacks}) y la interferencia intencional (\textit{jamming}). Para mitigar estos riesgos es necesario implementar mecanismos de cifrado a nivel de aplicación, autenticación de dispositivos y validación de integridad de los mensajes.
+
+
+
