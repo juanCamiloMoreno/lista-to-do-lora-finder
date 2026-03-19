@@ -41,12 +41,12 @@
 #define RGB_LED_PIN   38
 
 /* Botones de navegación (pull-up interno, presionado = LOW) */
-#define BTN_UP_PIN      2
+#define BTN_UP_PIN     16
 #define BTN_DOWN_PIN    3
 #define BTN_SELECT_PIN  4
 
 /* Alertas hápticas y sonoras */
-#define BUZZER_PIN      7   /* Buzzer activo — directo al GPIO */
+#define BUZZER_PIN     35   /* Buzzer activo — directo al GPIO */
 #define MOTOR_VIB_PIN  15   /* Motor vibrador — vía transistor NPN */
 
 #endif /* PINS_H */

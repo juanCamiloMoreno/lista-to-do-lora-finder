@@ -7,7 +7,7 @@
 #include <U8g2lib.h>
 
 /* SSD1306 128x64 — I2C hardware, buffer completo (pines explícitos) */
-static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, OLED_RST, OLED_SCL, OLED_SDA);
+static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R2, OLED_RST, OLED_SCL, OLED_SDA);
 
 /* ── Ciclo de vida ────────────────────────────────────────────────────── */
 
@@ -30,6 +30,8 @@ bool display_init(void)
 
 void display_clear(void)  { u8g2.clearBuffer(); }
 void display_update(void) { u8g2.sendBuffer();  }
+void display_off(void)    { u8g2.setPowerSave(1); }
+void display_on(void)     { u8g2.setPowerSave(0); }
 
 /* ── Texto ────────────────────────────────────────────────────────────── */
 
@@ -49,6 +51,18 @@ void display_print_medium(int x, int y, const char *text)
 
 void display_draw_circle(int x, int y, int r)
     { u8g2.drawCircle(x, y, r); }
+void display_draw_frame(int x, int y, int w, int h)
+    { u8g2.drawFrame(x, y, w, h); }
+void display_draw_box(int x, int y, int w, int h)
+    { u8g2.drawBox(x, y, w, h); }
+void display_draw_rframe(int x, int y, int w, int h, int r)
+    { u8g2.drawRFrame(x, y, w, h, r); }
+void display_draw_rbox(int x, int y, int w, int h, int r)
+    { u8g2.drawRBox(x, y, w, h, r); }
+void display_set_draw_color(uint8_t c)
+    { u8g2.setDrawColor(c); }
+void display_set_font_mode(uint8_t m)
+    { u8g2.setFontMode(m); }
 
 void display_draw_line(int x1, int y1, int x2, int y2)
     { u8g2.drawLine(x1, y1, x2, y2); }

@@ -24,6 +24,9 @@ void compass_draw_ui(float heading_deg, int cx, int cy, int radius);
 /* Flecha delgada (1 px) apuntando en 'angle_deg' desde el centro */
 void compass_draw_arrow(int cx, int cy, float angle_deg, int length);
 
+/* Flecha corta SOLO del centro al extremo (sin cola) — indicador de Norte */
+void compass_draw_north_arrow(int cx, int cy, float angle_deg, int length);
+
 /* Flecha gruesa (3 px) apuntando en 'angle_deg' */
 void compass_draw_arrow_thick(int cx, int cy, float angle_deg, int length);
 

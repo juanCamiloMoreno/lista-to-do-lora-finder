@@ -31,4 +31,8 @@ int  lora_receive(uint8_t *buf, size_t max_len,
 /* true si el radio fue inicializado correctamente */
 bool lora_is_ready(void);
 
+/* Cambia el Spreading Factor en caliente y reinicia RX (sf: 7–12) */
+bool    lora_set_sf(uint8_t sf);
+uint8_t lora_get_sf(void);
+
 #endif /* LORA_H */

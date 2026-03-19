@@ -23,3 +23,15 @@ static void _flash(uint8_t r, uint8_t g, uint8_t b)
 
 void led_flash_tx(void) { _flash(0,   0, 200); }   /* Azul  */
 void led_flash_rx(void) { _flash(0, 200,   0); }   /* Verde */
+
+void led_set_color(uint8_t r, uint8_t g, uint8_t b)
+{
+    _led.setPixelColor(0, _led.Color(r, g, b));
+    _led.show();
+}
+
+void led_off(void)
+{
+    _led.clear();
+    _led.show();
+}

@@ -5,7 +5,7 @@
 #define LORA_FREQUENCY      915E6   /* Hz — Región Americas (cambiar a 868E6 para Europa) */
 #define LORA_BANDWIDTH      125E3
 #define LORA_SF             7       /* Spreading Factor 7-12 */
-#define LORA_TX_POWER       14      /* dBm */
+#define LORA_TX_POWER       22      /* dBm — máximo SX1262 */
 
 /* ── GPS ──────────────────────────────────────────────────────────────── */
 #define GPS_BAUD            9600
@@ -27,5 +27,24 @@
 #define COMPASS_OUTLIER_DEG    90.0f
 /* Duración del modo calibración en milisegundos */
 #define COMPASS_CALIB_MS      15000
+
+/* ── FSM — Temporización ──────────────────────────────────────────────── */
+#define SEARCH_RETRY_MS       3000    /* ms entre reintentos SEARCH_START   */
+#define SEARCH_MAX_RETRIES    5       /* intentos antes de timeout          */
+#define STATUS_INTERVAL_MS    2000    /* ms entre STATUS/BEACON periódicos  */
+#define SIGNAL_LOST_MS        15000   /* ms sin paquete → señal perdida     */
+#define SIGNAL_GIVEUP_MS      60000   /* ms en señal perdida → rendirse     */
+#define ALERT_ACK_TIMEOUT_MS  60000   /* ms máx para que objetivo confirme  */
+#define SOS_INTERVAL_MS       1000    /* ms entre mensajes SOS_ALERT        */
+#define REUNITED_SHOW_MS      4000    /* ms mostrando pantalla REUNIDOS     */
+
+/* ── FSM — Umbrales de reunión ────────────────────────────────────────── */
+#define REUNITE_DIST_M        20.0f   /* metros → considerar reunión        */
+#define REUNITE_RSSI_DBM      (-60)   /* dBm (sin GPS) → considerar reunión */
+
+/* ── Compás en pantalla de navegación ────────────────────────────────── */
+#define NAV_ARROW_CX          100
+#define NAV_ARROW_CY          35
+#define NAV_ARROW_LEN         24
 
 #endif /* SYSTEM_CONFIG_H */
