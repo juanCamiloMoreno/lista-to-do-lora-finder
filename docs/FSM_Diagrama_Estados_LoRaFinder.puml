@@ -4,11 +4,9 @@
 ' Fecha: Marzo 2026
 ' Renderizar con: PlantUML (VS Code ext. o plantuml.com)
 ' ============================================================
-
-
 ' ────────────────────────────────────────────────────────────
 ' DIAGRAMA 1: Arquitectura de componentes
-' ────────────────────────────────────────────────────────────
+' ───────────────────────────────────────────────────────────markdown-preview-enhancedmarkdown-preview-enhanced─
 @startuml Arquitectura_Componentes
 !theme plain
 skinparam componentStyle rectangle

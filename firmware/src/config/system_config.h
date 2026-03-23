@@ -1,6 +1,12 @@
 #ifndef SYSTEM_CONFIG_H
 #define SYSTEM_CONFIG_H
 
+/* ── Debug Log ─────────────────────────────────────────────────────────
+ * DEBUG_LOG 1 → imprime [TX] / [RX] en Serial a 115200.
+ * Cambiar a 0 para deshabilitar en producción y reducir overhead.
+ * ─────────────────────────────────────────────────────────────────────── */
+#define DEBUG_LOG           0
+
 /* ── LoRa (SX1262) ────────────────────────────────────────────────────── */
 #define LORA_FREQUENCY      915E6   /* Hz — Región Americas (cambiar a 868E6 para Europa) */
 #define LORA_BANDWIDTH      125E3
@@ -41,6 +47,16 @@
 /* ── FSM — Umbrales de reunión ────────────────────────────────────────── */
 #define REUNITE_DIST_M        20.0f   /* metros → considerar reunión        */
 #define REUNITE_RSSI_DBM      (-60)   /* dBm (sin GPS) → considerar reunión */
+
+/* ── FSM — Suavizado RSSI para detección "encontrado" (C-09) ──────────
+ * Media móvil + contador de confirmaciones + histéresis para evitar
+ * falsas detecciones con un solo paquete fuerte (H-02).
+ * Estos valores son defaults; se pueden sobreescribir desde NVS (C-11).
+ * ─────────────────────────────────────────────────────────────────────── */
+#define RSSI_AVG_WINDOW       10    /* muestras para la media móvil         */
+#define RSSI_CONFIRM_COUNT    5     /* confirmaciones consecutivas requeridas */
+#define RSSI_THRESHOLD_FOUND  (-40) /* dBm — umbral para entrar "encontrado" */
+#define RSSI_HYSTERESIS       15    /* dBm — umbral salida = THR - HIST      */
 
 /* ── Compás en pantalla de navegación ────────────────────────────────── */
 #define NAV_ARROW_CX          100

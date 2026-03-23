@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 /* ── Constantes ──────────────────────────────────────────────────────── */
-#define DEBOUNCE_MS   30u
+#define DEBOUNCE_MS   100u
 #define HOLD_MS      500u
 
 static const uint8_t _pins[BTN_COUNT] = { BTN_UP_PIN, BTN_DOWN_PIN, BTN_SELECT_PIN };
@@ -95,4 +95,10 @@ bool btn_held(btn_id_t btn)
 bool btn_raw_low(btn_id_t btn)
 {
     return digitalRead(_pins[btn]) == LOW;
+}
+
+void btn_flush(void)
+{
+    for (int i = 0; i < BTN_COUNT; i++)
+        _fall_flag[i] = false;
 }

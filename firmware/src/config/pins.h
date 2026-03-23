@@ -29,9 +29,10 @@
 #define LORA_DIO1    14
 #define LORA_BUSY    13
 
-/* GPS (UART2) */
-#define GPS_RX_PIN   33
-#define GPS_TX_PIN   34
+/* GPS / GNSS (UART1) — pines confirmados con código de referencia funcional */
+#define GPS_RX_PIN   39   /* GNSS_TX → ESP32 RX (ESP32 escucha aquí) */
+#define GPS_TX_PIN   38   /* GNSS_RX → ESP32 TX (ESP32 envía aquí)  */
+#define GPS_EN_PIN   34   /* GPS_ENABLE — active LOW (LOW=encendido)  */
 
 /* Batería (Heltec WiFi LoRa 32 V4) */
 #define BAT_ADC_PIN   1   /* GPIO1 ADC1_CH0 — entrada del divisor */

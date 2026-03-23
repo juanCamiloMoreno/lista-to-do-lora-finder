@@ -1,5 +1,5 @@
 #include "debug_menu.h"
-#include "comm/lora_comm.h"
+#include "comm/lora_comm.h"   /* lora_comm_set_state para logs */
 #include "comm/lora_msg.h"
 #include "drivers/display/display.h"
 #include "drivers/btn/btn.h"
@@ -275,19 +275,23 @@ void debug_menu_update(void)
     gps_update();
     lora_comm_tick();
 
-    /* Recibir paquetes LoRa (responder PING, registrar PONG) */
+    /* Recibir paquetes LoRa */
     lora_msg_t msg;
     int16_t    rssi;
     float      snr;
     if (lora_comm_receive(&msg, &rssi, &snr)) {
-        if (msg.msg_type == (uint8_t)MSG_TEST_PING) {
-            /* Responder como receptor */
+        /* Auto-PONG: SOLO cuando NO estamos en modo DM_LORA.
+         * En DM_LORA el usuario controla las TX manualmente con BTN_UP
+         * para no generar transmisiones no esperadas (H-10 / C-04). */
+        if (msg.msg_type == (uint8_t)MSG_TEST_PING && _state != DM_LORA) {
             lora_msg_t pong;
             memset(&pong, 0, sizeof(pong));
             pong.msg_type  = (uint8_t)MSG_TEST_PONG;
             pong.sender_id = lora_comm_device_id();
             pong.bat_pct   = msg.bat_pct;
             lora_comm_send(&pong);
+            /* Contabilizar el PONG enviado como TX (C-03) */
+            _lora_tx++;
         }
         if (msg.msg_type == (uint8_t)MSG_TEST_PONG ||
             msg.msg_type == (uint8_t)MSG_TEST_PING) {
@@ -304,12 +308,19 @@ void debug_menu_update(void)
         if (btn_pressed(BTN_UP))   _cursor = (_cursor > 0) ? _cursor - 1 : DM_ITEM_COUNT - 1;
         if (btn_pressed(BTN_DOWN)) _cursor = (_cursor < DM_ITEM_COUNT - 1) ? _cursor + 1 : 0;
         if (btn_pressed(BTN_SELECT)) {
+            btn_flush();   /* descartar rebotes del press que causó la transición */
             switch (_cursor) {
             case 0: _state = DM_BUTTONS; _b_up = _b_dn = _b_sel = false; break;
             case 1: _state = DM_COMPASS; break;
             case 2: _state = DM_LED; _led_idx = 0; led_off(); break;
             case 3: _state = DM_GPS; break;
-            case 4: _state = DM_LORA; _lora_tx = _lora_rx = 0; break;
+            case 4:
+                _state = DM_LORA;
+                /* Resetear contadores al entrar — asegurar punto de partida limpio */
+                _lora_tx = _lora_rx = 0;
+                _lora_rssi = 0; _lora_snr = 0.0f;
+                lora_comm_set_state("DBG_LORA");
+                break;
             case 5: _done = true; return;
             }
         }
@@ -345,7 +356,7 @@ void debug_menu_update(void)
 
     /* ── Test Brújula ─────────────────────────────────────────────────── */
     if (_state == DM_COMPASS) {
-        if (btn_pressed(BTN_SELECT)) { _state = DM_MENU; return; }
+        if (btn_pressed(BTN_SELECT)) { btn_flush(); _state = DM_MENU; return; }
         _draw_compass();
         return;
     }
@@ -365,7 +376,7 @@ void debug_menu_update(void)
 
         if (btn_pressed(BTN_SELECT)) {
             led_off();
-            _state = DM_MENU;
+            btn_flush(); _state = DM_MENU;
             return;
         }
         _draw_led();
@@ -374,7 +385,7 @@ void debug_menu_update(void)
 
     /* ── Test GPS ─────────────────────────────────────────────────────── */
     if (_state == DM_GPS) {
-        if (btn_pressed(BTN_SELECT)) { _state = DM_MENU; return; }
+        if (btn_pressed(BTN_SELECT)) { btn_flush(); _state = DM_MENU; return; }
         _draw_gps();
         return;
     }
@@ -382,7 +393,7 @@ void debug_menu_update(void)
     /* ── Test LoRa ────────────────────────────────────────────────────── */
     if (_state == DM_LORA) {
         if (btn_pressed(BTN_UP))     _send_debug_ping();
-        if (btn_pressed(BTN_SELECT)) { _state = DM_MENU; return; }
+        if (btn_pressed(BTN_SELECT)) { btn_flush(); _state = DM_MENU; return; }
         _draw_lora();
         return;
     }

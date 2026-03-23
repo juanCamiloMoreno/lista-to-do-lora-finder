@@ -1,7 +1,9 @@
 #include "app.h"
+#include "config/system_config.h"
 #include "diag.h"
 #include "fsm/role_manager.h"
 #include "comm/lora_comm.h"
+#include "config/nvs_config.h"   /* C-11: configuración persistente */
 #include "drivers/display/display.h"
 #include "drivers/compass/compass.h"
 #include "drivers/gps/gps.h"
@@ -36,6 +38,15 @@ void app_init(void)
     btn_init();
     lora_init();
     lora_comm_init();
+
+    /* Cargar configuración desde NVS (C-11) y aplicar SF guardado */
+    nvs_config_init();
+    {
+        nvs_config_t *cfg = nvs_config_get();
+        if (cfg->spreading_factor != LORA_SF) {
+            lora_comm_set_sf(cfg->spreading_factor);
+        }
+    }
 
     /* Calibrar compás si no hay datos guardados */
     if (!compass_has_calibration()) {

@@ -21,7 +21,11 @@ static uint32_t       _last_tx   = 0;   /* último BEACON enviado             */
 static uint32_t       _last_rx   = 0;   /* último paquete del buscador       */
 static uint32_t       _alert_ts  = 0;   /* para alertas periódicas           */
 static uint32_t       _sos_ts    = 0;   /* último SOS_ALERT enviado          */
-static int16_t        _peer_rssi = 0;   /* RSSI del buscador                 */
+
+/* RSSI local  = lo que este nodo (objetivo) mide del buscador */
+static int16_t        _peer_rssi        = 0;
+/* RSSI remoto = lo que el buscador reporta haber medido de nosotros (C-07) */
+static int8_t         _peer_rssi_remote = 0;
 
 /* Para detección de hold UP → SOS */
 static uint32_t _up_hold_start = 0;
@@ -50,6 +54,14 @@ static lora_msg_t _build_msg(lora_msg_type_t type)
     return m;
 }
 
+/* Helper: dibuja ícono de batería en esquina superior izquierda (C-05) */
+static void _draw_battery_corner(void)
+{
+    battery_data_t bat;
+    battery_read(&bat);
+    battery_draw_icon(0, 0, &bat);
+}
+
 /* Detecta si BTN_UP lleva >2 s sostenido */
 static bool _sos_triggered(void)
 {
@@ -72,6 +84,9 @@ static bool _sos_triggered(void)
 static void _draw_alerting(void)
 {
     display_clear();
+
+    _draw_battery_corner();   /* C-05 */
+
     display_print_medium(15, 14, "! Te buscan !");
     display_print_small (0,  28, "Alguien necesita");
     display_print_small (0,  38, "encontrarte.");
@@ -85,9 +100,7 @@ static void _draw_beacon(void)
     char buf[24];
     display_clear();
 
-    battery_data_t bat;
-    battery_read(&bat);
-    battery_draw_icon(0, 0, &bat);
+    _draw_battery_corner();   /* C-05 */
 
     display_print_small(20, 8, "Modo baliza");
 
@@ -102,8 +115,12 @@ static void _draw_beacon(void)
     } else {
         snprintf(buf, sizeof(buf), "GPS-- Sat:%d", g.satellites);
         display_print_small(0, 22, buf);
-        snprintf(buf, sizeof(buf), "RSSI buscador: %d", (int)_peer_rssi);
-        display_print_small(0, 36, buf);
+        /* RSSI local (lo que este nodo mide del buscador) */
+        snprintf(buf, sizeof(buf), "RSSI loc: %d", (int)_peer_rssi);
+        display_print_small(0, 33, buf);
+        /* RSSI remoto (lo que el buscador mide de nosotros) — C-07 */
+        snprintf(buf, sizeof(buf), "RSSI rem: %d", (int)_peer_rssi_remote);
+        display_print_small(0, 43, buf);
     }
 
     display_print_small(0,  57, "[UP 2s]=SOS  [OK]=Fin");
@@ -113,6 +130,9 @@ static void _draw_beacon(void)
 static void _draw_sos(void)
 {
     display_clear();
+
+    _draw_battery_corner();   /* C-05 */
+
     display_print_medium(15, 16, "! SOS ACTIVO !");
     display_print_small (0,  30, "Alertando al");
     display_print_small (0,  40, "buscador...");
@@ -123,6 +143,9 @@ static void _draw_sos(void)
 static void _draw_reunited(void)
 {
     display_clear();
+
+    _draw_battery_corner();   /* C-05 */
+
     display_print_medium(10, 20, "! REUNIDOS !");
     display_print_small (0,  40, "Mision completada");
     display_update();
@@ -132,14 +155,17 @@ static void _draw_reunited(void)
 
 void fsm_target_init(const lora_msg_t *first_msg, int16_t rssi)
 {
-    _peer_id    = first_msg->sender_id;
-    _peer_rssi  = rssi;
-    _state      = TARGET_ALERTING;
-    _timer      = millis();
-    _alert_ts   = 0;
-    _last_tx    = millis();
-    _last_rx    = millis();
-    _up_holding = false;
+    _peer_id          = first_msg->sender_id;
+    _peer_rssi        = rssi;
+    _peer_rssi_remote = first_msg->rssi_last;   /* C-07 */
+    _state            = TARGET_ALERTING;
+    _timer            = millis();
+    _alert_ts         = 0;
+    _last_tx          = millis();
+    _last_rx          = millis();
+    _up_holding       = false;
+
+    lora_comm_set_state("TGT_ALERTING");
 
     /* Alerta inmediata al usuario */
     alert_error();
@@ -176,6 +202,7 @@ void fsm_target_update(void)
             lora_comm_send(&ack);
             _last_tx = millis();
             _state   = TARGET_BEACON;
+            lora_comm_set_state("TGT_BEACON");
             return;
         }
 
@@ -192,11 +219,13 @@ void fsm_target_update(void)
     case TARGET_BEACON:
         /* Procesar STATUS del buscador */
         if (got) {
-            _last_rx   = millis();
-            _peer_rssi = rssi;
+            _last_rx          = millis();
+            _peer_rssi        = rssi;
+            _peer_rssi_remote = msg.rssi_last;   /* C-07 */
             if (msg.msg_type == (uint8_t)MSG_REUNITE_CONFIRM) {
                 _state = TARGET_REUNITED;
                 _timer = millis();
+                lora_comm_set_state("TGT_REUNITED");
                 alert_beep_double();
                 alert_vib_long();
                 return;
@@ -222,6 +251,7 @@ void fsm_target_update(void)
         if (_sos_triggered()) {
             _state  = TARGET_SOS;
             _sos_ts = 0;
+            lora_comm_set_state("TGT_SOS");
             alert_error();
             return;
         }
@@ -241,8 +271,9 @@ void fsm_target_update(void)
 
         /* Procesar STATUS del buscador (para confirmar que escucha) */
         if (got) {
-            _last_rx   = millis();
-            _peer_rssi = rssi;
+            _last_rx          = millis();
+            _peer_rssi        = rssi;
+            _peer_rssi_remote = msg.rssi_last;   /* C-07 */
         }
 
         /* [SELECT] = cancelar SOS */
@@ -250,6 +281,7 @@ void fsm_target_update(void)
             lora_msg_t cancel = _build_msg(MSG_SOS_CANCEL);
             lora_comm_send(&cancel);
             _state = TARGET_BEACON;
+            lora_comm_set_state("TGT_BEACON");
             return;
         }
 

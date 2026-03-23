@@ -23,3 +23,6 @@ bool btn_held(btn_id_t btn);
 
 /* Lectura directa del pin (LOW = presionado) — solo diagnóstico */
 bool btn_raw_low(btn_id_t btn);
+
+/* Descarta todos los flags pendientes — llamar al transicionar entre menús */
+void btn_flush(void);

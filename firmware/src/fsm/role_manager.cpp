@@ -131,11 +131,12 @@ void role_manager_update(void)
                     switch (_home_cursor) {
                     case 0:                  /* MENU */
                         _role = ROLE_TEST_MENU;
+                        lora_comm_set_state("TEST_MENU");
                         test_menu_init();
                         return;
                     case 1:                  /* BUSCAR */
                         _role = ROLE_SEARCHER;
-                        fsm_searcher_init();
+                        fsm_searcher_init();   /* lora_comm_set_state dentro */
                         return;
                     case 2:                  /* OFF-DIS */
                         power_standby_force();
@@ -155,6 +156,7 @@ void role_manager_update(void)
         fsm_searcher_update();
         if (fsm_searcher_is_done()) {
             _role = ROLE_NONE;
+            lora_comm_set_state("ROLE_NONE");
             power_standby_init();
             /* Pantalla breve de retorno */
             display_clear();
@@ -170,6 +172,7 @@ void role_manager_update(void)
         fsm_target_update();
         if (fsm_target_is_done()) {
             _role = ROLE_NONE;
+            lora_comm_set_state("ROLE_NONE");
             power_standby_init();
             display_clear();
             display_print_medium(15, 24, "LoRa Finder");

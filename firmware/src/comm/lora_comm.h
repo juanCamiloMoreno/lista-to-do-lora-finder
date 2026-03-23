@@ -29,3 +29,6 @@ uint32_t lora_comm_device_id(void);
 /* Cambia el Spreading Factor en caliente (7–12) y reinicia RX */
 bool     lora_comm_set_sf(uint8_t sf);
 uint8_t  lora_comm_get_sf(void);
+
+/* Actualiza el nombre del estado FSM actual (aparece en logs [TX]/[RX]) */
+void     lora_comm_set_state(const char *state_name);
