@@ -1,4 +1,5 @@
 #include "fsm_target.h"
+#include "drivers/wifi/wifi_scan.h"
 #include "comm/lora_comm.h"
 #include "nav/navigation.h"
 #include "config/system_config.h"
@@ -201,6 +202,7 @@ void fsm_target_update(void)
             lora_msg_t ack = _build_msg(MSG_ACK);
             lora_comm_send(&ack);
             _last_tx = millis();
+            wifi_ap_start();
             _state   = TARGET_BEACON;
             lora_comm_set_state("TGT_BEACON");
             return;
@@ -208,6 +210,7 @@ void fsm_target_update(void)
 
         /* Timeout: nadie pulsó [SELECT] */
         if (millis() - _timer > ALERT_ACK_TIMEOUT_MS) {
+            wifi_ap_stop();
             _state = TARGET_DONE;
             return;
         }
@@ -223,6 +226,7 @@ void fsm_target_update(void)
             _peer_rssi        = rssi;
             _peer_rssi_remote = msg.rssi_last;   /* C-07 */
             if (msg.msg_type == (uint8_t)MSG_REUNITE_CONFIRM) {
+                wifi_ap_stop();
                 _state = TARGET_REUNITED;
                 _timer = millis();
                 lora_comm_set_state("TGT_REUNITED");
@@ -243,6 +247,7 @@ void fsm_target_update(void)
         if (btn_pressed(BTN_SELECT)) {
             lora_msg_t rc = _build_msg(MSG_REUNITE_CONFIRM);
             lora_comm_send(&rc);
+            wifi_ap_stop();
             _state = TARGET_DONE;
             return;
         }
@@ -292,6 +297,7 @@ void fsm_target_update(void)
     case TARGET_REUNITED:
         _draw_reunited();
         if (millis() - _timer > REUNITED_SHOW_MS) {
+            wifi_ap_stop();
             _state = TARGET_DONE;
         }
         break;

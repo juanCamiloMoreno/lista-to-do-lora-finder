@@ -1,4 +1,5 @@
 #include "fsm_searcher.h"
+#include "drivers/wifi/wifi_scan.h"
 #include "comm/lora_comm.h"
 #include "nav/navigation.h"
 #include "config/system_config.h"
@@ -162,6 +163,10 @@ static void _draw_nav(bool is_gps)
         compass_draw_arrow_thick(NAV_ARROW_CX, NAV_ARROW_CY,
                                  _bearing - 90.0f,   /* conv: 0=Este en display */
                                  NAV_ARROW_LEN);
+
+        /* WiFi hot/cold */
+        snprintf(buf, sizeof(buf), "W: %s", wifi_hot_label(wifi_scan_hot_cold()));
+        display_print_small(0, 48, buf);
     } else {
         /* Modo RSSI */
         snprintf(buf, sizeof(buf), "RSSI: %d", (int)_tgt_rssi);
@@ -172,8 +177,8 @@ static void _draw_nav(bool is_gps)
         else if (diff < -3) display_print_small(0, 36, "< FRIO");
         else                display_print_small(0, 36, "  IGUAL");
 
-        /* RSSI remoto (lo que el objetivo midió de nosotros) — C-07 */
-        snprintf(buf, sizeof(buf), "Rem:%d", (int)_tgt_rssi_remote);
+        /* RSSI remoto + WiFi hot/cold compactado — C-07 */
+        snprintf(buf, sizeof(buf), "R:%d W:%s", (int)_tgt_rssi_remote, wifi_hot_label(wifi_scan_hot_cold()));
         display_print_small(0, 48, buf);
     }
 
@@ -276,9 +281,11 @@ static void _go_nav(int16_t rssi, const lora_msg_t *ack)
             _bearing = nav_bearing_deg((float)my.latitude,  (float)my.longitude,
                                         _tgt_lat, _tgt_lon);
         }
+        wifi_scan_start();
         _state = SEARCHER_NAV_GPS;
         lora_comm_set_state("SRCH_NAV_GPS");
     } else {
+        wifi_scan_start();
         _state = SEARCHER_NAV_RSSI;
         lora_comm_set_state("SRCH_NAV_RSSI");
     }
@@ -286,6 +293,7 @@ static void _go_nav(int16_t rssi, const lora_msg_t *ack)
 
 static void _go_reunited(void)
 {
+    wifi_scan_stop();
     _state = SEARCHER_REUNITED;
     _timer = millis();
     alert_beep_double();
@@ -367,6 +375,7 @@ void fsm_searcher_update(void)
 {
     gps_update();
     lora_comm_tick();
+    wifi_scan_tick();
 
     lora_msg_t msg;
     int16_t    rssi;
@@ -413,7 +422,7 @@ void fsm_searcher_update(void)
         bool nav_gps = (_state == SEARCHER_NAV_GPS);
 
         /* Cancelar */
-        if (btn_pressed(BTN_SELECT)) { _state = SEARCHER_DONE; return; }
+        if (btn_pressed(BTN_SELECT)) { wifi_scan_stop(); _state = SEARCHER_DONE; return; }
 
         /* Paquete entrante */
         if (got && msg.sender_id == _peer_id) {
@@ -462,7 +471,7 @@ void fsm_searcher_update(void)
 
     /* ── SEÑAL PERDIDA ─────────────────────────────────────────────────── */
     case SEARCHER_SIGNAL_LOST:
-        if (btn_pressed(BTN_SELECT)) { _state = SEARCHER_DONE; return; }
+        if (btn_pressed(BTN_SELECT)) { wifi_scan_stop(); _state = SEARCHER_DONE; return; }
 
         /* Paquete recuperado */
         if (got && msg.sender_id == _peer_id) {
@@ -482,6 +491,7 @@ void fsm_searcher_update(void)
 
         /* Rendirse */
         if (millis() - _timer > SIGNAL_GIVEUP_MS) {
+            wifi_scan_stop();
             _state = SEARCHER_DONE;
             return;
         }
@@ -494,6 +504,7 @@ void fsm_searcher_update(void)
         _draw_reunited();
         if (btn_pressed(BTN_SELECT) ||
             millis() - _timer > REUNITED_SHOW_MS) {
+            wifi_scan_stop();
             _state = SEARCHER_DONE;
         }
         break;
