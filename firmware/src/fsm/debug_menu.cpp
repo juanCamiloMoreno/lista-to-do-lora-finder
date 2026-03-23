@@ -6,6 +6,7 @@
 #include "drivers/compass/compass.h"
 #include "drivers/gps/gps.h"
 #include "drivers/led/led.h"
+#include "drivers/alert/alert.h"
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -19,16 +20,20 @@ typedef enum {
     DM_LED,
     DM_GPS,
     DM_LORA,
+    DM_BUZZER,
+    DM_VIBRADOR,
 } dm_state_t;
 
 /* ── Menú principal ───────────────────────────────────────────────────── */
-#define DM_ITEM_COUNT 6
+#define DM_ITEM_COUNT 8
 static const char * const _items[DM_ITEM_COUNT] = {
     "Botones",
     "Brujula",
     "LED RGB",
     "GPS",
     "LoRa TX/RX",
+    "Buzzer",
+    "Vibrador",
     "<< Volver",
 };
 
@@ -202,6 +207,26 @@ static void _draw_gps(void)
     display_update();
 }
 
+static void _draw_buzzer(void)
+{
+    display_clear();
+    display_print_small(18, 9, "= Test Buzzer =");
+    display_print_small(0, 26, "[^] Pitido corto");
+    display_print_small(0, 40, "[v] Pitido largo");
+    display_print_small(0, 62, "[OK]=salir");
+    display_update();
+}
+
+static void _draw_vibrador(void)
+{
+    display_clear();
+    display_print_small(14, 9, "= Test Vibrador =");
+    display_print_small(0, 26, "[^] Vibracion corta");
+    display_print_small(0, 40, "[v] Vibracion larga");
+    display_print_small(0, 62, "[OK]=salir");
+    display_update();
+}
+
 static void _draw_lora(void)
 {
     char buf[24];
@@ -316,12 +341,13 @@ void debug_menu_update(void)
             case 3: _state = DM_GPS; break;
             case 4:
                 _state = DM_LORA;
-                /* Resetear contadores al entrar — asegurar punto de partida limpio */
                 _lora_tx = _lora_rx = 0;
                 _lora_rssi = 0; _lora_snr = 0.0f;
                 lora_comm_set_state("DBG_LORA");
                 break;
-            case 5: _done = true; return;
+            case 5: _state = DM_BUZZER;   break;
+            case 6: _state = DM_VIBRADOR; break;
+            case 7: _done = true; return;
             }
         }
         _draw_menu();
@@ -387,6 +413,24 @@ void debug_menu_update(void)
     if (_state == DM_GPS) {
         if (btn_pressed(BTN_SELECT)) { btn_flush(); _state = DM_MENU; return; }
         _draw_gps();
+        return;
+    }
+
+    /* ── Test Buzzer ──────────────────────────────────────────────────── */
+    if (_state == DM_BUZZER) {
+        if (btn_pressed(BTN_UP))     alert_beep_short();
+        if (btn_pressed(BTN_DOWN))   alert_beep_long();
+        if (btn_pressed(BTN_SELECT)) { btn_flush(); _state = DM_MENU; return; }
+        _draw_buzzer();
+        return;
+    }
+
+    /* ── Test Vibrador ────────────────────────────────────────────────── */
+    if (_state == DM_VIBRADOR) {
+        if (btn_pressed(BTN_UP))     alert_vib_short();
+        if (btn_pressed(BTN_DOWN))   alert_vib_long();
+        if (btn_pressed(BTN_SELECT)) { btn_flush(); _state = DM_MENU; return; }
+        _draw_vibrador();
         return;
     }
 
