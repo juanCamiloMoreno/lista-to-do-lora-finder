@@ -37,7 +37,7 @@ bool gps_is_enabled(void)
 bool gps_init(void)
 {
     pinMode(GPS_EN_PIN, OUTPUT);
-    gps_enable();
+    gps_disable();   /* apagado por defecto — se activa en modo búsqueda o test GPS */
 
     _serial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
 

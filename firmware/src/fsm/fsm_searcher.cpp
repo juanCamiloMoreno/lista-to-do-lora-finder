@@ -8,6 +8,7 @@
 #include "drivers/battery/battery.h"
 #include "drivers/btn/btn.h"
 #include "drivers/alert/alert.h"
+#include "drivers/led/led.h"
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -357,6 +358,8 @@ static bool _check_reunited(void)
 
 void fsm_searcher_init(void)
 {
+    gps_enable();
+    led_set_color(128, 0, 128);   /* morado = GPS activo */
     _go_searching();
 }
 

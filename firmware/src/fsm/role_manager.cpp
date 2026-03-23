@@ -10,6 +10,7 @@
 #include "drivers/battery/battery.h"
 #include "drivers/btn/btn.h"
 #include "drivers/alert/alert.h"
+#include "drivers/led/led.h"
 #include "drivers/power/power.h"
 
 #include <Arduino.h>
@@ -155,6 +156,8 @@ void role_manager_update(void)
     case ROLE_SEARCHER:
         fsm_searcher_update();
         if (fsm_searcher_is_done()) {
+            gps_disable();
+            led_off();
             _role = ROLE_NONE;
             lora_comm_set_state("ROLE_NONE");
             power_standby_init();

@@ -8,6 +8,7 @@
 #include "drivers/gps/gps.h"
 #include "drivers/btn/btn.h"
 #include "drivers/alert/alert.h"
+#include "drivers/led/led.h"
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -556,6 +557,8 @@ void test_menu_update(void)
                 break;
             case 4:
                 _state = TM_GPS;
+                gps_enable();
+                led_set_color(128, 0, 128);   /* morado = GPS activo */
                 lora_comm_set_state("TM_GPS");
                 break;
             case 5:
@@ -710,7 +713,11 @@ void test_menu_update(void)
 
     /* ── GPS Precisión ───────────────────────────────────────────────── */
     if (_state == TM_GPS) {
-        if (btn_pressed(BTN_SELECT)) { btn_flush(); _state = TM_MENU; return; }
+        if (btn_pressed(BTN_SELECT)) {
+            gps_disable();
+            led_off();
+            btn_flush(); _state = TM_MENU; return;
+        }
         _draw_gps();
         return;
     }
